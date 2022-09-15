@@ -63,16 +63,12 @@ export const createAndVerifyAddress = async ({ chain }, mnemonic = 'Alice') => {
       .send({ address, chain, wallet_id, block_info: TEST_BLOCK_INFO_STRING });
     const address_id = res.body.result.id;
     const token = res.body.result.verification_token;
-    const chain_id = chain === 'alex' ? 3 : 1;   // use ETH mainnet for testing except alex
-    const sessionWallet = ethers.Wallet.createRandom()
-    const message = constructCanvasMessage("eth", chain_id, address, sessionWallet.address, TEST_BLOCK_INFO_STRING);
+    const chain_id = chain === 'alex' ? '3' : '1';   // use ETH mainnet for testing except alex
+    const sessionWallet = ethers.Wallet.createRandom();
+    const timestamp = 1665083987891;
     const data = constructTypedCanvasMessage(message);
     const privateKey = keypair.getPrivateKey();
-    const signature = signTypedData({
-      privateKey,
-      data,
-      version: SignTypedDataVersion.V4,
-    });
+    const signature = signTypedData({ privateKey, data: msgParams, version: SignTypedDataVersion.V4 });
     res = await chai.request
       .agent(app)
       .post('/api/verifyAddress')
@@ -83,6 +79,7 @@ export const createAndVerifyAddress = async ({ chain }, mnemonic = 'Alice') => {
         signature,
         wallet_id,
         session_public_address: sessionWallet.address,
+        session_timestamp: timestamp,
         session_block_data: TEST_BLOCK_INFO_STRING,
       });
     console.log(JSON.stringify(res.body));

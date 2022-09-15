@@ -1,9 +1,11 @@
 declare let window: any;
 
+import * as solw3 from '@solana/web3.js';
+import { SessionPayload } from '@canvas-js/interfaces';
+
 import app from 'state';
 import { ChainBase, ChainNetwork, WalletId } from 'common-common/src/types';
 import { Account, IWebWallet } from 'models';
-import { CanvasData } from 'shared/adapters/shared';
 
 class PhantomWebWalletController implements IWebWallet<string> {
   // GETTERS/SETTERS
@@ -33,14 +35,14 @@ class PhantomWebWalletController implements IWebWallet<string> {
   }
 
   public getChainId() {
-    return app.chain?.id || this.defaultNetwork;
+    return (app.chain?.id.toString()) ?? "101";
   }
 
   public async getRecentBlock(chainIdentifier: string) {
     return null
   }
 
-  public async signCanvasMessage(account: Account, canvasMessage: CanvasData): Promise<string> {
+  public async signCanvasMessage(account: Account, canvasMessage: SessionPayload): Promise<string> {
     const encodedMessage = new TextEncoder().encode(JSON.stringify(canvasMessage));
     const { signature } = await window.solana.signMessage(
       encodedMessage,

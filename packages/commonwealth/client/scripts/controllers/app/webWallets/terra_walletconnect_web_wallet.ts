@@ -6,8 +6,9 @@ import {
   WalletController,
 } from '@terra-money/wallet-controller';
 import { LCDClient, TendermintAPI } from '@terra-money/terra.js';
+import { SessionPayload } from '@canvas-js/interfaces';
+
 import { Account, BlockInfo, IWebWallet } from 'models';
-import { CanvasData } from 'shared/adapters/shared';
 import app from 'state';
 
 // TODO: ensure this only opens on mobile
@@ -64,7 +65,7 @@ class TerraWalletConnectWebWalletController implements IWebWallet<TerraAddress> 
     };
   }
 
-  public async signCanvasMessage(account: Account, canvasMessage: CanvasData): Promise<string> {
+  public async signCanvasMessage(account: Account, canvasMessage: SessionPayload): Promise<string> {
     try {
       const result = await this._wallet.signBytes(Buffer.from(JSON.stringify(canvasMessage)));
       if (!result.success) {

@@ -10,10 +10,13 @@ import { InjectedAccountWithMeta } from '@polkadot/extension-inject/types';
 import { Signer } from '@polkadot/api/types';
 import { stringToHex } from '@polkadot/util';
 import { SignerPayloadRaw } from '@polkadot/types/types/extrinsic';
+import { ApiPromise, WsProvider } from '@polkadot/api';
+
+import { SessionPayload } from '@canvas-js/interfaces';
+
 import { ChainBase, ChainNetwork, WalletId } from 'common-common/src/types';
 import { Account, IWebWallet } from 'models';
 import { addressSwapper } from 'commonwealth/shared/utils';
-import { CanvasData } from 'shared/adapters/shared';
 
 class PolkadotWebWalletController implements IWebWallet<InjectedAccountWithMeta>
 {
@@ -63,7 +66,7 @@ class PolkadotWebWalletController implements IWebWallet<InjectedAccountWithMeta>
   }
 
   // ACTIONS
-  public async signCanvasMessage(account: Account, canvasMessage: CanvasData): Promise<string> {
+  public async signCanvasMessage(account: Account, canvasMessage: SessionPayload): Promise<string> {
     const message = stringToHex(JSON.stringify(canvasMessage));
 
     const signer = await this.getSigner(account.address);

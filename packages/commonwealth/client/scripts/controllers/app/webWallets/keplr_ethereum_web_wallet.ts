@@ -2,6 +2,7 @@ import app from 'state';
 
 import { StargateClient } from '@cosmjs/stargate';
 import { OfflineDirectSigner, AccountData } from '@cosmjs/proto-signing';
+import { SessionPayload } from '@canvas-js/interfaces';
 
 import { ChainBase, ChainNetwork, WalletId } from 'common-common/src/types';
 import { Account, IWebWallet } from 'models';
@@ -10,7 +11,6 @@ import {
   ChainInfo,
   EthSignType,
 } from '@keplr-wallet/types';
-import { CanvasData } from 'shared/adapters/shared';
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-empty-interface
@@ -70,7 +70,7 @@ class EVMKeplrWebWalletController implements IWebWallet<AccountData> {
     };
   }
 
-  public async signCanvasMessage(account: Account, canvasMessage: CanvasData): Promise<string> {
+  public async signCanvasMessage(account: Account, canvasMessage: SessionPayload): Promise<string> {
     const signature = await window.keplr.signEthereum(
       this._chainId,
       account.address,

@@ -6,7 +6,7 @@ import app from 'state';
 import $ from 'jquery';
 import _ from 'underscore';
 
-import { constructCanvasMessage, chainBasetoCanvasChain } from 'adapters/shared';
+import { constructCanvasMessage, chainBaseToCanvasChain, chainBaseToCanvasChainId } from 'adapters/shared';
 import { initAppState } from 'app';
 import {
   completeClientLogin,
@@ -36,19 +36,33 @@ type LoginModalAttrs = {
   onSuccess?: () => void;
 };
 
-async function signWithWallet<T extends { address: string }>(wallet: IWebWallet<T>, account: Account) {
-  const chainId = wallet.getChainId();
-  const sessionPublicAddress = await app.sessions.getOrCreateAddress(wallet.chain, chainId);
+
+export function getSessionSigningTimestamp(): number {
+  return (new Date()).getTime();
+}
+
+async function signWithWallet<T extends { address: string }>(wallet: IWebWallet<T>, account: Account, timestamp: number) {
+  // We don't know what chain_id the wallet is using to sign messages,
+  // because we might be on a multi-chain page, or the wallet might
+  // be configured to a different chain than expected.
+  //
+  // So we ask WebWallet for the correct ID by calling getChainId(),
+  // and pass it to the backend, for validation.
+  const canvasChain = chainBaseToCanvasChain(wallet.chain);
+  const canvasChainId = wallet.getChainId().toString();
+  const sessionPublicAddress = await app.sessions.getOrCreateAddress(wallet.chain, canvasChainId);
 
   const canvasMessage = constructCanvasMessage(
-    chainBasetoCanvasChain(wallet.chain),
-    chainId,
+    canvasChain,
+    canvasChainId,
     account.address,
     sessionPublicAddress,
+    timestamp,
     account.validationBlockInfo,
   );
 
-  return wallet.signCanvasMessage(account, canvasMessage);
+  const signature = await wallet.signCanvasMessage(account, canvasMessage);
+  return { signature, chainId: canvasChainId };
 }
 
 export class NewLoginModal extends ClassComponent<LoginModalAttrs> {
@@ -63,6 +77,7 @@ export class NewLoginModal extends ClassComponent<LoginModalAttrs> {
   private selectedWallet: IWebWallet<any>;
   private selectedLinkingWallet: IWebWallet<any>;
   private cachedWalletSignature: string;
+  private cachedTimestamp: number;
   private cachedChainId: string | number;
   private primaryAccount: Account;
   private secondaryLinkAccount: Account;
@@ -227,8 +242,9 @@ export class NewLoginModal extends ClassComponent<LoginModalAttrs> {
     ) => {
       // Handle Logged in and joining community of different chain base
       if (this.currentlyInCommunityPage && app.isLoggedIn()) {
-        const signature = await signWithWallet(this.selectedWallet, account);
-        await account.validate(signature, this.selectedWallet.getChainId());
+        const timestamp = getSessionSigningTimestamp();
+        const { signature, chainId }  = await signWithWallet(this.selectedWallet, account, timestamp);
+        await account.validate(signature, timestamp, chainId);
         await logInWithAccount(account, true);
         return;
       }
@@ -248,15 +264,15 @@ export class NewLoginModal extends ClassComponent<LoginModalAttrs> {
           return;
         }
         this.secondaryLinkAccount = account;
-        this.secondaryChainId = this.selectedWallet.getChainId();
         this.profiles = [account.profile]; // TODO: Update when User -> Many Profiles goes in
       }
 
       // Handle receiving and caching wallet signature strings
       if (!newlyCreated && !linking) {
         try {
-          const signature = await signWithWallet(this.selectedWallet, account);
-          await account.validate(signature, this.selectedWallet.getChainId());
+          const timestamp = getSessionSigningTimestamp()
+          const { signature, chainId } = await signWithWallet(this.selectedWallet, account, timestamp);
+          await account.validate(signature, timestamp, chainId);
           await logInWithAccount(account, true);
         } catch (e) {
           console.log(e);
@@ -264,9 +280,11 @@ export class NewLoginModal extends ClassComponent<LoginModalAttrs> {
       } else {
         if (!linking) {
           try {
-            const signature = await signWithWallet(this.selectedWallet, account);
+            const timestamp = getSessionSigningTimestamp()
+            const { signature, chainId } = await signWithWallet(this.selectedWallet, account, timestamp);
             this.cachedWalletSignature = signature;
-            this.cachedChainId = this.selectedWallet.getChainId();
+            this.cachedTimestamp = timestamp;
+            this.cachedChainId = chainId;
           } catch (e) {
             console.log(e);
           }
@@ -284,7 +302,7 @@ export class NewLoginModal extends ClassComponent<LoginModalAttrs> {
     const createNewAccountCallback = async () => {
       try {
         if (this.selectedWallet.chain !== 'near') {
-          await this.primaryAccount.validate(this.cachedWalletSignature, this.cachedChainId);
+          await this.primaryAccount.validate(this.cachedWalletSignature, this.cachedTimestamp, this.cachedChainId);
         }
         await logInWithAccount(this.primaryAccount, false);
       } catch (e) {
@@ -310,10 +328,11 @@ export class NewLoginModal extends ClassComponent<LoginModalAttrs> {
     // Validates both linking (secondary) and primary accounts
     const performLinkingCallback = async () => {
       try {
-        const signature = await signWithWallet(
-          this.selectedLinkingWallet, this.secondaryLinkAccount);
-        await this.secondaryLinkAccount.validate(signature, this.secondaryChainId);
-        await this.primaryAccount.validate(this.cachedWalletSignature, this.cachedChainId);
+        const secondaryTimestamp = getSessionSigningTimestamp()
+        const { signature: secondarySignature, chainId: secondaryChainId } = await signWithWallet(
+          this.selectedLinkingWallet, this.secondaryLinkAccount, secondaryTimestamp);
+        await this.secondaryLinkAccount.validate(secondarySignature, secondaryTimestamp, secondaryChainId);
+        await this.primaryAccount.validate(this.cachedWalletSignature, this.cachedTimestamp, this.cachedChainId);
         await logInWithAccount(this.primaryAccount, true);
       } catch (e) {
         console.log(e);

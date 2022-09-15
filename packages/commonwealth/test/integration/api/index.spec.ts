@@ -52,12 +52,13 @@ describe('API Tests', () => {
         .set('Accept', 'application/json')
         .send({ address, chain, wallet_id, block_info: TEST_BLOCK_INFO_STRING });
       const token = res.body.result.verification_token;
-      const chain_id = 1;   // use ETH mainnet for testing
-      const sessionWallet = ethers.Wallet.createRandom()
-      const message = constructCanvasMessage("eth", chain_id, address, sessionWallet.address, TEST_BLOCK_INFO_STRING);
+      const chain_id = '1'; // use ETH mainnet for testing
+      const sessionWallet = ethers.Wallet.createRandom();
+      const timestamp = 1665083987891;
+      const message = constructCanvasMessage("eth", chain_id, address, sessionWallet.address, timestamp, TEST_BLOCK_INFO_STRING);
       const data = constructTypedCanvasMessage(message);
       const privateKey = keypair.getPrivateKey();
-      const signature = signTypedData({ privateKey, data, version: SignTypedDataVersion.V4 });
+      const signature = signTypedData({ privateKey, data: msgParams, version: SignTypedDataVersion.V4 });
       res = await chai.request(app)
         .post('/api/verifyAddress')
         .set('Accept', 'application/json')
@@ -67,6 +68,7 @@ describe('API Tests', () => {
           signature,
           wallet_id,
           session_public_address: sessionWallet.address,
+          session_timestamp: timestamp,
           session_block_data: TEST_BLOCK_INFO_STRING,
         });
       expect(res.body).to.not.be.null;

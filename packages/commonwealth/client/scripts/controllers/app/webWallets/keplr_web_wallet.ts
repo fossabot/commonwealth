@@ -2,10 +2,10 @@ import app from 'state';
 
 import { SigningStargateClient, StargateClient } from '@cosmjs/stargate';
 import { OfflineDirectSigner, AccountData } from '@cosmjs/proto-signing';
+import { Window as KeplrWindow, ChainInfo } from '@keplr-wallet/types';
+import { SessionPayload } from '@canvas-js/interfaces';
 
 import { ChainBase, ChainNetwork, WalletId } from 'common-common/src/types';
-import { Window as KeplrWindow, ChainInfo } from '@keplr-wallet/types';
-import { CanvasData } from 'shared/adapters/shared';
 import { Account, IWebWallet } from 'models';
 
 declare global {
@@ -67,10 +67,10 @@ class KeplrWebWalletController implements IWebWallet<AccountData> {
     };
   }
 
-  public async signCanvasMessage(account: Account, canvasMessage: CanvasData): Promise<string> {
+  public async signCanvasMessage(account: Account, canvasMessage: SessionPayload): Promise<string> {
     const chainId = this.getChainId();
     const stdSignature = await window.keplr.signArbitrary(chainId, account.address, JSON.stringify(canvasMessage))
-    return JSON.stringify({signature: stdSignature});
+    return JSON.stringify({ signature: stdSignature });
   }
 
   // ACTIONS

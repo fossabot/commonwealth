@@ -32,6 +32,7 @@ import {
 import { factory, formatFilename } from 'common-common/src/logging';
 import { addressSwapper } from '../../shared/utils';
 import { ChainInstance } from '../models/chain';
+import { ChainNodeInstance } from '../models/chain_node';
 import { ProfileAttributes } from '../models/profile';
 import { AddressInstance } from '../models/address';
 import { validationTokenToSignDoc } from '../../shared/adapters/chain/cosmos/keys';
@@ -41,7 +42,7 @@ import { DynamicTemplate } from '../../shared/types';
 import { AppError, ServerError } from 'common-common/src/errors';
 import { mixpanelTrack } from '../util/mixpanelUtil';
 import { MixpanelLoginEvent } from '../../shared/analytics/types';
-import { chainBasetoCanvasChain, constructCanvasMessage } from '../../shared/adapters/shared';
+import { chainBaseToCanvasChain, chainBaseToCanvasChainId, constructCanvasMessage } from '../../shared/adapters/shared';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const sgMail = require('@sendgrid/mail');
@@ -65,10 +66,12 @@ export const Errors = {
 const verifySignature = async (
   models: DB,
   chain: ChainInstance,
+  chain_id: string | number,
   addressModel: AddressInstance,
   user_id: number,
   signatureString: string,
   sessionPublicAddress: string | null, // used when signing a block to login
+  sessionTimestamp: string | null,     // used when signing a block to login
   sessionBlockInfo: string | null,     // used when signing a block to login
 ): Promise<boolean> => {
   if (!chain) {
@@ -77,13 +80,14 @@ const verifySignature = async (
   }
 
   // Reconstruct the expected canvas message
+  const canvasChain = chainBaseToCanvasChain(chain.base);
+  const canvasChainId = chainBaseToCanvasChainId(chain.base, chain_id);
   const canvasMessage = constructCanvasMessage(
-    chainBasetoCanvasChain(chain.base),
-    // TODO: Figure out how to retrieve the right chain ID
-    // this is not currently being checked
-    "unknown",
+    canvasChain,
+    canvasChainId,
     addressModel.address,
     sessionPublicAddress,
+    sessionTimestamp,
     addressModel.block_info!
   );
 
@@ -123,7 +127,6 @@ const verifySignature = async (
     //
     // ethereum address handling on cosmos chains via metamask
     //
-
     const msgBuffer = Buffer.from(JSON.stringify(canvasMessage));
 
     // toBuffer() doesn't work if there is a newline
@@ -271,7 +274,7 @@ const verifySignature = async (
       }
     } catch (e) {
       log.info(
-        `Eth verification failed for ${addressModel.address}: ${e.message}`
+        `Eth verification failed for ${addressModel.address}: ${e.stack}`
       );
       isValid = false;
     }
@@ -358,11 +361,13 @@ const verifySignature = async (
 const processAddress = async (
   models: DB,
   chain: ChainInstance,
+  chain_id: string | number,
   address: string,
   wallet_id: WalletId,
   signature: string,
   user: Express.User,
   sessionPublicAddress: string | null,
+  sessionTimestamp: string | null,
   sessionBlockInfo: string | null,
 ): Promise<void> => {
   const existingAddress = await models.Address.scope('withPrivateData').findOne(
@@ -388,20 +393,23 @@ const processAddress = async (
     !!existingAddress.verified && user && existingAddress.user_id !== user.id;
   const oldId = existingAddress.user_id;
   try {
+    const node = await models.ChainNode.findOne({ where: { id: chain.chain_node_id } });
     const valid = await verifySignature(
       models,
       chain,
+      chain_id,
       existingAddress,
       user ? user.id : null,
       signature,
       sessionPublicAddress,
+      sessionTimestamp,
       sessionBlockInfo
     );
     if (!valid) {
       throw new AppError(Errors.InvalidSignature);
     }
   } catch (e) {
-    log.warn(`Failed to verify signature for ${address}: ${e.message}`);
+    log.warn(`Failed to verify signature for ${address}: ${e.stack}`);
     throw new AppError(Errors.CouldNotVerifySignature);
   }
 
@@ -441,12 +449,13 @@ const verifyAddress = async (
   res: Response,
   next: NextFunction
 ) => {
-  if (!req.body.chain) {
+  if (!req.body.chain || !req.body.chain_id) {
     throw new AppError(Errors.NoChain);
   }
   const chain = await models.Chain.findOne({
     where: { id: req.body.chain },
   });
+  const chain_id = req.body.chain_id;
   if (!chain) {
     return next(new AppError(Errors.InvalidChain));
   }
@@ -466,11 +475,13 @@ const verifyAddress = async (
   await processAddress(
     models,
     chain,
+    chain_id,
     address,
     req.body.wallet_id,
     req.body.signature,
     req.user,
     req.body.session_public_address,
+    req.body.session_timestamp,
     req.body.session_block_data,
   );
 

@@ -1,7 +1,8 @@
+import { Extension, LCDClient, TendermintAPI } from '@terra-money/terra.js';
+import { SessionPayload } from '@canvas-js/interfaces';
+
 import { ChainBase, ChainNetwork, WalletId } from 'common-common/src/types';
 import { Account, IWebWallet } from 'models';
-import { Extension, LCDClient, TendermintAPI } from '@terra-money/terra.js';
-import { CanvasData } from 'shared/adapters/shared';
 import app from 'state';
 
 type TerraAddress = {
@@ -82,7 +83,7 @@ class TerraStationWebWalletController implements IWebWallet<TerraAddress> {
     };
   }
 
-  public async signCanvasMessage(account: Account, canvasMessage: CanvasData): Promise<string> {
+  public async signCanvasMessage(account: Account, canvasMessage: SessionPayload): Promise<string> {
     // timeout?
     const result = await new Promise<any>((resolve, reject) => {
       this._extension.on('onSign', (payload) => {

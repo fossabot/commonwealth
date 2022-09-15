@@ -86,6 +86,9 @@ export const modelFromServer = (comment) => {
           authorChain: comment?.Address?.chain || comment.authorChain,
           lastEdited,
           deleted: true,
+          canvasAction: comment.canvas_action,
+          canvasSession: comment.canvas_session,
+          canvasHash: comment.canvas_hash,
         }
       : {
           chain: comment.chain,
@@ -102,6 +105,9 @@ export const modelFromServer = (comment) => {
           authorChain: comment?.Address?.chain || comment.authorChain,
           lastEdited,
           deleted: false,
+          canvasAction: comment.canvas_action,
+          canvasSession: comment.canvas_session,
+          canvasHash: comment.canvas_hash,
         };
 
   return new Comment(commentParams);
@@ -168,6 +174,14 @@ class CommentsController {
       chainEntity = app.chainEntities.store.getByUniqueId(app.activeChainId(), proposalIdentifier);
     }
     try {
+      const { session, action, hash } = await app.sessions.signComment({
+        community: chain,
+        threadId: proposalIdentifier,
+        text: unescapedText,
+        parent: parentCommentId,
+      });
+
+      // TODO: Change to POST /comment
       const res = await $.post(`${app.serverUrl()}/createComment`, {
         author_chain: app.user.activeAccount.chain.id,
         chain,
@@ -178,6 +192,9 @@ class CommentsController {
         'attachments[]': attachments,
         text: encodeURIComponent(unescapedText),
         jwt: app.user.jwt,
+        canvas_action: action,
+        canvas_session: session,
+        canvas_hash: hash,
       });
       const { result } = res;
       const newComment = modelFromServer(result);
@@ -203,6 +220,11 @@ class CommentsController {
     const newBody = body || comment.text;
     try {
       // TODO: Change to PUT /comment
+      const { session, action, hash } = await app.sessions.signComment({
+        text: body,
+        parent: comment.parentCommentId
+      });
+      const signedData = JSON.stringify({ session, action });
       const response = await $.post(`${app.serverUrl()}/editComment`, {
         address: app.user.activeAccount.address,
         author_chain: app.user.activeAccount.chain.id,
@@ -211,6 +233,9 @@ class CommentsController {
         body: encodeURIComponent(newBody),
         'attachments[]': attachments,
         jwt: app.user.jwt,
+        canvas_action: comment.canvasAction,
+        canvas_session: comment.canvasSession,
+        canvas_hash: comment.canvasHash,
       });
       const result = modelFromServer(response.result);
       if (this._store.getById(result.id)) {
@@ -229,6 +254,9 @@ class CommentsController {
   }
 
   public async delete(comment) {
+    const { signature } = await app.sessions.signDeleteComment({
+      hash: comment.canvasHash
+    });
     return new Promise((resolve, reject) => {
       // TODO: Change to DELETE /comment
       $.post(`${app.serverUrl()}/deleteComment`, {

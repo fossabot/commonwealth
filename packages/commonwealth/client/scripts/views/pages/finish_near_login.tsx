@@ -95,7 +95,7 @@ class FinishNearLogin extends ClassComponent<Record<string, never>> {
 
 
       // create canvas thing
-      const chainId = chain.id;
+      const chainId = "mainnet";
       const sessionPublicAddress = await app.sessions.getOrCreateAddress(ChainBase.NEAR, chainId);
 
       // We do not add blockInfo for NEAR
@@ -109,7 +109,7 @@ class FinishNearLogin extends ClassComponent<Record<string, never>> {
 
       const canvasMessage = constructCanvasMessage(
         "near" as Chain,
-        chainId,
+        chainId.toString(),
         acct.address,
         sessionPublicAddress,
         null

@@ -1492,6 +1492,14 @@
   resolved "https://registry.yarnpkg.com/@canvas-js/interfaces/-/interfaces-0.0.37.tgz#37ae964a57f8b10290351814e9c10ab49371f6ae"
   integrity sha512-5uFOUx5XP2TiNgIZ/WlSk+PfJsLv2pSWepeYMddhqFO8fdVARWsv1HWA2CpEWietyjmZPBBqbikqcwiJ+PP4ng==
 
+"@canvas-js/verifiers@^0.0.37":
+  version "0.0.37"
+  resolved "https://registry.yarnpkg.com/@canvas-js/verifiers/-/verifiers-0.0.37.tgz#ba03c65f2df7bae22d0579354c381fb312ea8396"
+  integrity sha512-FAHIrCpfqWtYnEfDPO9ih79qgfTnrKIbVqUwL82PpOxYb1iv1Sc1gYfCdWZ/lEdcob4AFrnQDtU5VU4aGNc+Dg==
+  dependencies:
+    bs58 "^5.0.0"
+    tweetnacl "^1.0.3"
+
 "@confio/ics23@^0.6.3":
   version "0.6.5"
   resolved "https://registry.yarnpkg.com/@confio/ics23/-/ics23-0.6.5.tgz#9c21a61089d4c3c2429875a69d6d9cd8c87512aa"
@@ -6225,6 +6233,11 @@ base-x@^3.0.6, base-x@^3.0.8:
   dependencies:
     safe-buffer "^5.0.1"
 
+base-x@^4.0.0:
+  version "4.0.0"
+  resolved "https://registry.yarnpkg.com/base-x/-/base-x-4.0.0.tgz#d0e3b7753450c73f8ad2389b5c018a4af7b2224a"
+  integrity sha512-FuwxlW4H5kh37X/oW59pwTzzTKRzfrrQwhmyspRM7swOEZcHtDZSCt45U6oKgtuFE+WYPblePMVIPR4RZrh/hw==
+
 base64-arraybuffer@~1.0.1:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/base64-arraybuffer/-/base64-arraybuffer-1.0.1.tgz#87bd13525626db4a9838e00a508c2b73efcf348c"
@@ -6681,6 +6694,13 @@ bs58@^4.0.0, bs58@^4.0.1:
   integrity sha1-vhYedsNU9veIrkBx9j806MTwpCo=
   dependencies:
     base-x "^3.0.2"
+
+bs58@^5.0.0:
+  version "5.0.0"
+  resolved "https://registry.yarnpkg.com/bs58/-/bs58-5.0.0.tgz#865575b4d13c09ea2a84622df6c8cbeb54ffc279"
+  integrity sha512-r+ihvQJvahgYT50JD05dyJNKlmmSlMoOGwn1lCcEzanPglg7TxYjioQUYehQ9mAR/+hOSd2jRc/Z2y5UxBymvQ==
+  dependencies:
+    base-x "^4.0.0"
 
 bs58check@<3.0.0, bs58check@^2.1.1, bs58check@^2.1.2:
   version "2.1.2"
@@ -11173,6 +11193,11 @@ fp-ts@^1.0.0:
   resolved "https://registry.yarnpkg.com/fp-ts/-/fp-ts-1.19.5.tgz#3da865e585dfa1fdfd51785417357ac50afc520a"
   integrity sha512-wDNqTimnzs8QqpldiId9OavWK2NptormjXnRJTQecNjzwfyp6P/8s/zG8e4h3ja3oqkKaY72UlTjQYt/1yXf9A==
 
+fp16@^0.2.0:
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/fp16/-/fp16-0.2.0.tgz#9bc5283af42ef844e53cb52a5a528b18ff19e19f"
+  integrity sha512-rP3kzmANkEOeg99U3b8d9UGkAJV9MUse/2oooxqMwLYjqSe0ZmrqnrCzI3WGobkxTOw4eVQUz0hH9iRkP3WBKg==
+
 fragment-cache@^0.2.1:
   version "0.2.1"
   resolved "https://registry.npmjs.org/fragment-cache/-/fragment-cache-0.2.1.tgz"
@@ -14518,6 +14543,13 @@ methods@^1.1.1, methods@^1.1.2, methods@~1.1.2:
   version "1.1.2"
   resolved "https://registry.npmjs.org/methods/-/methods-1.1.2.tgz"
   integrity sha1-VSmk1nZUE07cxSZmVoNbD4Ua/O4=
+
+microcbor@^0.2.1:
+  version "0.2.1"
+  resolved "https://registry.yarnpkg.com/microcbor/-/microcbor-0.2.1.tgz#3a691dcfb710af83b079d5b9ead525fff38b2997"
+  integrity sha512-CdVF2APl2GGgWEXrGUbEt24blu3FvzxnccNA3pR9L0yaifFi8y6WfkZewGG6nyrWIrEB6W7ldFmrD2Fz967hkQ==
+  dependencies:
+    fp16 "^0.2.0"
 
 micromatch@^3.1.10, micromatch@^3.1.4:
   version "3.1.10"

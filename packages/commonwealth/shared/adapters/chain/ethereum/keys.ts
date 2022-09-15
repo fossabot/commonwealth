@@ -14,10 +14,14 @@ export const constructTypedCanvasMessage = (message) => {
       { name: 'name', type: 'string' },
     ],
     Message: [
-      { name: "loginTo", type: "string" },
-      { name: "registerSessionAddress", type: "string" },
-      { name: "registerSessionDuration", type: "uint256" },
+      { name: "from", type: "string" },
+      { name: "spec", type: "string" },
       { name: "timestamp", type: "uint256" },
+      { name: "address", type: "string" },
+      { name: "duration", type: "uint256" },
+      { name: "blockhash", type: "string" },
+      { name: "chain", type: "string" },
+      { name: "chainId", type: "string" },
     ],
   };
 

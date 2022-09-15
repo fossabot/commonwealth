@@ -5,12 +5,13 @@ declare let window: any;
 import Web3 from 'web3';
 import { provider } from 'web3-core';
 import { StargateClient } from '@cosmjs/stargate';
+import { Address } from 'ethereumjs-util';
+import { SessionPayload } from '@canvas-js/interfaces';
+
 import { ChainBase, ChainNetwork, WalletId } from 'common-common/src/types';
 import { Account, IWebWallet } from 'models';
 import app from 'state';
 import { setActiveAccount } from 'controllers/app/login';
-import { Address } from 'ethereumjs-util';
-import { CanvasData } from 'shared/adapters/shared';
 
 function encodeEthAddress(bech32Prefix: string, address: string): string {
   return bech32.encode(
@@ -75,7 +76,7 @@ class CosmosEvmWebWalletController implements IWebWallet<string> {
     return this._chainId;
   }
 
-  public async signCanvasMessage(account: Account, canvasMessage: CanvasData): Promise<string> {
+  public async signCanvasMessage(account: Account, canvasMessage: SessionPayload): Promise<string> {
     const signature = await this._web3.eth.personal.sign(
       JSON.stringify(canvasMessage),
       this._ethAccounts[0],
