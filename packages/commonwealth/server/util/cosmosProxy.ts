@@ -28,11 +28,11 @@ function setupCosmosProxy(app: Express, models: DB) {
           origin: 'https://commonwealth.im'
         }
       });
-      StatsD.get().increment('cosmos_proxy_success', [ req.params.chain ]);
+      StatsD.get().increment('cosmos_proxy_success', { chain: req.params.chain });
       log.trace(`Got response from endpoint: ${JSON.stringify(response.data, null, 2)}`);
       return res.send(response.data);
     } catch (err) {
-      StatsD.get().increment('cosmos_proxy_error', [ req.params.chain ]);
+      StatsD.get().increment('cosmos_proxy_error', { chain: req.params.chain });
       res.status(500).json({ message: err.message });
     }
   });
