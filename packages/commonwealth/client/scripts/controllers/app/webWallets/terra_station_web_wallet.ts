@@ -69,7 +69,6 @@ class TerraStationWebWalletController implements IWebWallet<string> {
       }
     });
 
-    console.log(result);
     const signature = {
       signature: {
         pub_key: {

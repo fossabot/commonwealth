@@ -90,7 +90,6 @@ export const customIconLookup = {
   terrastation: CustomIcons.CWTerraStation,
   unreads: CustomIcons.CWUnreads,
   walletconnect: CustomIcons.CWWalletConnect,
-  'terra-walletconnect': CustomIcons.CWWalletConnect,
 };
 
 export type IconName = keyof typeof iconLookup;
