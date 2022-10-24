@@ -12,7 +12,6 @@ import KeplrEthereumWalletController from './webWallets/keplr_ethereum_web_walle
 import CosmosEvmMetamaskWalletController from './webWallets/cosmos_evm_metamask_web_wallet';
 import PhantomWebWalletController from './webWallets/phantom_web_wallet';
 import RoninWebWalletController from './webWallets/ronin_web_wallet';
-import TerraWalletConnectWebWalletController from './webWallets/terra_walletconnect_web_wallet';
 
 export default class WebWalletController {
   private _wallets: IWebWallet<any>[];
@@ -97,7 +96,6 @@ export default class WebWalletController {
       new KeplrEthereumWalletController(),
       new PhantomWebWalletController(),
       new RoninWebWalletController(),
-      new TerraWalletConnectWebWalletController(),
     ];
   }
 }
