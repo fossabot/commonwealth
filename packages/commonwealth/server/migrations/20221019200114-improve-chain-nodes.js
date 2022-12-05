@@ -327,6 +327,40 @@ module.exports = {
           name: 'Solana (Devnet)',
           url: 'devnet'
         },
+        { name: "solana", url: "mainnet-beta" },
+        { name: "eth-local", url: "ws://127.0.0.1:7545" },
+        { name: "mainnet2", url: "mainnet2.edgewa.re" },
+        { name: "mainnet3", url: "mainnet3.edgewa.re" },
+        { name: "mainnet4", url: "mainnet4.edgewa.re" },
+        { name: "Terra", url: "https://lcd.phoenix.terra.setten.io/5e351408cfc5460186aa77ff1f38fac9" },
+        { name: "injective-testnet", url: "https://injective-rpc-testnet.cw-figment.workers.dev" },
+        { name: "injective", url: "https://injective-rpc.cw-figment.workers.dev" },
+        { name: "agoric", url: "https://main.rpc.agoric.net:443/" },
+        { name: "osmosis", url: "https://osmosis-rpc.cw-figment.workers.dev" },
+        { name: "near", url: "https://rpc.mainnet.near.org" },
+        { name: "near-testnet", url: "https://rpc.testnet.near.org" },
+        { name: "cosmos-local", url: "localhost:26657" },
+        { name: "edgeware-local", url: "localhost:9944" },
+        { name: "eth-ropsten", url: "wss://eth-ropsten.alchemyapi.io/v2/2xXT2xx5AvA3GFTev3j_nB9LzWdmxPk7" },
+        { name: "phala", url: "wss://poc3.phala.network/" },
+        { name: "str", url: "wss://straightedge.commonwealth.im" },
+        { name: "solana-devnet", url: "devnet" },
+        { name: "regen", url: "http://public-rpc.regen.vitwit.com:26657/" },
+        { name: "edgeware", url: "mainnet1.edgewa.re" },
+        { name: "solana-testnet", url: "testnet" },
+        { name: "clover", url: "ws://api.clover.finance/" },
+        { name: "crust", url: "wss://api.crust.network/" },
+        { name: "arbi", url: "wss://arb-mainnet.g.alchemy.com/v2/wJE2b7MRNJgk7S8dfgb_1xZNUDq7SF7G" },
+        { name: "arbi-rinkeby", url: "wss://arb-rinkeby.g.alchemy.com/v2/WLfTX_HT-26kIjsBaBx7CrTHEi45v212" },
+        { name: "darw", url: "wss://cc1.darwinia.network/" },
+        { name: "eth", url: "wss://eth-mainnet.alchemyapi.io/v2/cNC4XfxR7biwO2bfIO5aKcs9EMPxTQfr" },
+        { name: "centrifuge", url: "wss://fullnode.centrifuge.io/" },
+        { name: "ronin", url: "wss://ronin-rpc.commonwealth.im/wss" },
+        { name: "hydradx-snakenet", url: "wss://rpc-01.snakenet.hydradx.io/" },
+        { name: "kulupu", url: "wss://rpc.kulupu.corepaper.org/ws" },
+        { name: "plasmnet", url: "wss://rpc.plasmnet.io/" },
+        { name: "polkadot", url: "wss://rpc.polkadot.io" },
+        { name: "stafi", url: "wss://scan-rpc.stafi.io/" },
       ];
 
       // TODO: rectify balance_type, ss58, and bech32 values for each node
@@ -344,29 +378,31 @@ module.exports = {
         );
       }));
 
-      // fix two chains and remove duplicates
-      await queryInterface.bulkUpdate(
-        'Chains',
-        { chain_node_id: 17 },
-        { id: 'neta-money' },
-        { transaction },
-      );
-      await queryInterface.bulkUpdate(
-        'Chains',
-        { chain_node_id: 20 },
-        { id: 'clandestina' },
-        { transaction },
-      );
-      await queryInterface.bulkDelete(
-        'ChainNodes',
-        { id: 18 },
-        { transaction }
-      );
-      await queryInterface.bulkDelete(
-        'ChainNodes',
-        { id: 21 },
-        { transaction }
-      );
+      // // fix two chains and remove duplicates
+      // // already executed on prod, not used for clean dbs
+      // await queryInterface.bulkUpdate(
+      //   'Chains',
+      //   { chain_node_id: 17 },
+      //   { id: 'neta-money' },
+      //   { transaction },
+      // );
+      // await queryInterface.bulkUpdate(
+      //   'Chains',
+      //   { chain_node_id: 20 },
+      //   { id: 'clandestina' },
+      //   { transaction },
+      // );
+      // await queryInterface.bulkDelete(
+      //   'ChainNodes',
+      //   { id: 18 },
+      //   { transaction }
+      // );
+      // await queryInterface.bulkDelete(
+      //   'ChainNodes',
+      //   { id: 21 },
+      //   { transaction }
+      // );
+
       await queryInterface.changeColumn(
         'ChainNodes',
         'name',

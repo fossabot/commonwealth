@@ -17,12 +17,12 @@ module.exports = {
           allowNull: false,
           defaultValue: true,
         },
-        { transcation: t }
+        { transaction: t }
       );
 
       await queryInterface.sequelize.query(
         `UPDATE "Chains" SET chat_enabled = 'f' WHERE id IN ('axie-infinity', 'terra');`,
-        { transcation: t }
+        { transaction: t }
       );
     });
   },

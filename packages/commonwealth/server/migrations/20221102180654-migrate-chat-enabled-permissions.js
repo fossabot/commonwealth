@@ -15,7 +15,7 @@ module.exports = {
 
       // set the view_chat_channels bit on default_deny_permissions to 1 for all the chains that have chat disabled
       await queryInterface.sequelize.query(
-        `UPDATE "Chains" SET "default_deny_permissions" = "default_deny_permissions" | ${view_chat_channels_permission} 
+        `UPDATE "Chains" SET "default_deny_permissions" = "default_deny_permissions" | ${view_chat_channels_permission}
       WHERE "chat_enabled" = false;`,
         { transaction: t }
       );
@@ -48,14 +48,14 @@ module.exports = {
 
       // set chat enabled to false for all the chains that have view_chat_channels bit set to 1
       await queryInterface.sequelize.query(
-        `UPDATE "Chains" SET "chat_enabled" = false 
+        `UPDATE "Chains" SET "chat_enabled" = false
         WHERE "default_deny_permissions" & ${view_chat_channels_permission} = ${view_chat_channels_permission};`,
         { transaction: t }
       );
 
       // remove the view_chat_channels bit from default_deny_permissions
       await queryInterface.sequelize.query(
-        `UPDATE "Chains" 
+        `UPDATE "Chains"
         SET "default_deny_permissions" = "default_deny_permissions" & ~${view_chat_channels_permission};`,
         { transaction: t }
       );
