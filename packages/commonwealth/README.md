@@ -11,7 +11,7 @@ Discussions and governance for blockchain networks.
 ```bash
 brew install node yarn postgresql
 brew services start postgresql
-psql postgres -c "CREATE ROLE commonwealth WITH LOGIN PASSWORD 'edgeware'; ALTER ROLE commonwealth CREATEDB;"
+psql postgres -c "CREATE ROLE commonwealth WITH LOGIN PASSWORD 'edgeware'; ALTER ROLE commonwealth SUPERUSER;"
 psql postgres -h 127.0.0.1 -U commonwealth -c "CREATE DATABASE commonwealth;"
 ```
 
@@ -96,7 +96,7 @@ Make sure you have python installed in your Rosetta Terminal path. See: `https:/
 
 ## Environment Variables
 
-You should create a `.env` file in the root of the repository
+You should create a `.env` file at the `package/commonwealth` level
 to store environment variables like session secrets.
 
 Environment variables used for external services include:
@@ -184,10 +184,10 @@ A number of migrations for loading the latest on-chain data are
 defined in server.ts and package.json. To run these migrations on
 Heroku, some special syntax is needed.
 
-For example, to run the councillor/validator flags migration:
+For example, to run the chain events migration:
 
 ```
-FLAG_MIGRATION=true ts-node --log-error --project tsconfig.json server.ts
+CHAIN_ID=dydx yarn migrate-events
 ```
 
 ## Production Logs

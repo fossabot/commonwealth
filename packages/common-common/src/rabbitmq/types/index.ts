@@ -1,7 +1,19 @@
-export * from "./ChainEvents"
-export * from "./ChainEventNotification"
-import {RmqCWEvent} from "common-common/src/rabbitmq/types/ChainEvents";
-import {RmqCENotification} from "common-common/src/rabbitmq/types/ChainEventNotification";
+import {RmqEntityCUD} from './chainEntityCUD'
+import {
+  RmqCENotificationCUD
+} from "./chainEventNotificationsCUD";
+import {RmqCETypeCUD} from "./chainEventTypeCUD";
+
+export * from './chainEntityCUD';
+export * from './chainEventNotificationsCUD'
+export * from './chainEventTypeCUD'
+
+export * from "./chainEvents"
+export * from "./chainEventNotification"
+import { RmqCWEvent } from "common-common/src/rabbitmq/types/chainEvents";
+import { RmqSnapshotEvent } from "common-common/src/rabbitmq/types/snapshotListener";
+import { RmqCENotification } from "common-common/src/rabbitmq/types/chainEventNotification";
+import {RmqSnapshotNotification} from "common-common/src/rabbitmq/types/snapshotNotification";
 
 /**
  * This error type should be used in tandem with isRmqMsg functions. If this error type is thrown, RabbitMQ
@@ -13,56 +25,92 @@ export class RmqMsgFormatError extends Error {
   }
 }
 
+/**
+ * This type contains ALL the possible RabbitMQ message types. If you are publishing a message to any queue,
+ * anywhere, it MUST be one of these types
+ */
+export type TRmqMessages = RmqEntityCUD.RmqMsgType
+  | RmqCENotificationCUD.RmqMsgType
+  | RmqCETypeCUD.RmqMsgType
+  | RmqCWEvent.RmqMsgType
+  | RmqCENotification.RmqMsgType
+  | RmqSnapshotEvent.RmqMsgType
+  | RmqSnapshotNotification.RmqMsgType;
+
 export interface RmqMsgNamespace<MsgType> {
   getInvalidFormatError(...args): RmqMsgFormatError,
   isValidMsgFormat(data: any): data is MsgType,
   checkMsgFormat(data: any): void
 }
 
-/**
- * This type contains ALL the possible RabbitMQ message types. If you are publishing a message to any queue,
- * anywhere, it MUST be one of these types
- */
-export type TRmqMessages =
-  | RmqCWEvent.RmqMsgType
-  | RmqCENotification.RmqMsgType
-
 export enum RascalPublications {
   ChainEvents = 'ChainEventsPublication',
+  ChainEntityCUDMain = 'ChainEntityCUDMainPublication',
+  ChainEventNotificationsCUDMain = 'ChainEventNotificationsCUDMainPublication',
   ChainEventNotifications = 'ChainEventNotificationsPublication',
-  SubstrateIdentityEvents = 'SubstrateIdentityEventsPublication'
+  ChainEventTypeCUDMain = 'ChainEventTypeCUDMainPublication',
+  SnapshotProposalNotifications = 'SnapshotProposalNotificationsPublication',
+  SnapshotListener = 'SnapshotListenerPublication',
 }
 
 export enum RascalSubscriptions {
   ChainEvents = 'ChainEventsSubscription',
+  ChainEntityCUDMain = 'ChainEntityCUDMainSubscription',
+  ChainEventNotificationsCUDMain = 'ChainEventNotificationsCUDSubscription',
   ChainEventNotifications = 'ChainEventNotificationsSubscription',
-  SubstrateIdentityEvents = 'SubstrateIdentityEventsSubscription'
+  ChainEventTypeCUDMain = 'ChainEventTypeCUDMainSubscription',
+  SnapshotProposalNotifications = 'SnapshotProposalNotificationsSubscription',
+  SnapshotListener = 'SnapshotListenerSubscription',
 }
 
 export enum RascalExchanges {
   ChainEvents = 'ChainEventsExchange',
+  CUD = 'CreateUpdateDeleteExchange',
   Notifications = 'NotificationsExchange',
+  SnapshotListener = 'SnapshotListenerExchange',
   DeadLetter = 'DeadLetterExchange'
 }
 
 export enum RascalQueues {
   ChainEvents = 'ChainEventsQueue',
+  ChainEntityCUDMain = 'ChainEntityCUDMainQueue',
+  ChainEventNotificationsCUDMain = 'ChainEventNotificationsCUDMainQueue',
   ChainEventNotifications = 'ChainEventNotificationsQueue',
+  ChainEventTypeCUDMain = 'ChainEventTypeCUDMainQueue',
   DeadLetter = 'DeadLetterQueue',
-  SubstrateIdentityEvents = 'SubstrateIdentityEventsQueue'
+  SnapshotProposalNotifications = 'SnapshotProposalNotificationsQueue',
+  SnapshotListener = 'SnapshotListenerQueue',
 }
 
 export enum RascalBindings {
   ChainEvents = 'ChainEventsBinding',
+  ChainEntityCUDMain = 'ChainEntityCUDMainBinding',
+  ChainEventNotificationsCUD = 'ChainEventNotificationsCUDBinding',
   ChainEventNotifications = 'ChainEventNotificationsBinding',
-  SubstrateIdentityEvents = 'SubstrateIdentityEventsBinding',
+  ChainEventType = 'ChainEventTypeBinding',
+  SnapshotProposalNotifications = 'SnapshotProposalNotificationsBinding',
+  SnapshotListener = 'SnapshotListenerBinding',
   DeadLetter = 'DeadLetterBinding'
 }
 
 export enum RascalRoutingKeys {
   ChainEvents = 'ChainEvents',
+  ChainEntityCUD = 'ChainEntityCUD',
+  ChainEventNotificationsCUD = 'ChainEventNotificationsCUD',
   ChainEventNotifications = 'ChainEventNotifications',
-  SubstrateIdentityEvents = 'SubstrateIdentityEvents',
-  DeadLetter = 'deadLetter'
+  ChainEventTypeCUD = 'ChainEventTypeCUD',
+  SnapshotProposalNotifications = 'SnapshotProposalNotifications',
+  SnapshotListener = 'SnapshotListener',
+  DeadLetter = 'DeadLetter'
 }
 
+export interface SnapshotNotification {
+  id?: string;
+  title?: string;
+  body?: string;
+  choices?: string[];
+  space?: string;
+  event?: string;
+  start?: string;
+  expire?: string;
+}

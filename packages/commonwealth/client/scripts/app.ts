@@ -58,39 +58,43 @@ export async function initAppState(
         app.config.nodes.clear();
         app.user.notifications.clear();
         app.user.notifications.clearSubscriptions();
-        data.nodes
+        data.result.nodes
           .sort((a, b) => a.id - b.id)
           .map((node) => {
             return app.config.nodes.add(NodeInfo.fromJSON(node));
           });
-        data.chains
-          .filter((chain) => chain.active)
+        data.result.chainsWithSnapshots
+          .filter((chain) => chain.chain.active)
           .map((chain) => {
-            delete chain.ChainNode;
+            delete chain.chain.ChainNode;
             return app.config.chains.add(
               ChainInfo.fromJSON({
                 ChainNode: app.config.nodes.getById(chain.chain_node_id),
-                ...chain,
+                snapshot: chain.snapshot,
+                ...chain.chain,
               })
             );
           });
-        app.roles.setRoles(data.roles);
-        app.config.notificationCategories = data.notificationCategories.map(
-          (json) => NotificationCategory.fromJSON(json)
-        );
-        app.config.invites = data.invites;
-        app.config.chainCategories = data.chainCategories;
-        app.config.chainCategoryTypes = data.chainCategoryTypes;
+        app.roles.setRoles(data.result.roles);
+        app.config.notificationCategories =
+          data.result.notificationCategories.map((json) =>
+            NotificationCategory.fromJSON(json)
+          );
+        app.config.invites = data.result.invites;
+        app.config.chainCategories = data.result.chainCategories;
+        app.config.chainCategoryTypes = data.result.chainCategoryTypes;
 
         // add recentActivity
-        const { recentThreads } = data;
+        const { recentThreads } = data.result;
         recentThreads.forEach(({ chain, count }) => {
           app.recentActivity.setCommunityThreadCounts(chain, count);
         });
 
         // update the login status
-        updateActiveUser(data.user);
-        app.loginState = data.user ? LoginState.LoggedIn : LoginState.LoggedOut;
+        updateActiveUser(data.result.user);
+        app.loginState = data.result.user
+          ? LoginState.LoggedIn
+          : LoginState.LoggedOut;
 
         if (app.loginState == LoginState.LoggedIn) {
           console.log('Initializing socket connection with JTW:', app.user.jwt);
@@ -106,13 +110,17 @@ export async function initAppState(
         }
 
         app.user.setStarredCommunities(
-          data.user ? data.user.starredCommunities : []
+          data.result.user ? data.result.user.starredCommunities : []
         );
         // update the selectedChain, unless we explicitly want to avoid
         // changing the current state (e.g. when logging in through link_new_address_modal)
-        if (updateSelectedChain && data.user && data.user.selectedChain) {
+        if (
+          updateSelectedChain &&
+          data.result.user &&
+          data.result.user.selectedChain
+        ) {
           app.user.setSelectedChain(
-            ChainInfo.fromJSON(data.user.selectedChain)
+            ChainInfo.fromJSON(data.result.user.selectedChain)
           );
         }
 
@@ -238,7 +246,7 @@ export async function selectChain(
       await import(
         /* webpackMode: "lazy" */
         /* webpackChunkName: "ethereum-main" */
-        './controllers/chain/ethereum/adapter'
+        './controllers/chain/ethereum/tokenAdapter'
       )
     ).default;
     newChain = new Ethereum(chain, app);
@@ -331,15 +339,6 @@ export async function selectChain(
       )
     ).default;
     newChain = new Solana(chain, app);
-  } else if (chain.network === ChainNetwork.Commonwealth) {
-    const Commonwealth = (
-      await import(
-        /* webpackMode: "lazy" */
-        /* webpackChunkName: "commonwealth-main" */
-        './controllers/chain/ethereum/commonwealth/adapter'
-      )
-    ).default;
-    newChain = new Commonwealth(chain, app);
   } else if (
     chain.base === ChainBase.Ethereum &&
     chain.type === ChainType.Offchain
@@ -469,6 +468,7 @@ export const navigateToSubpage = (...args) => {
   if (!app.isCustomDomain() && app.activeChainId()) {
     args[0] = `/${app.activeChainId()}${args[0]}`;
   }
+  app.sidebarMenu = 'default';
   m.route.set.apply(this, args);
 };
 
@@ -722,6 +722,9 @@ Promise.all([$.ready, $.get('/api/domain')]).then(
               'views/pages/view_proposal/index',
               { scoped: true }
             ),
+            '/:scope/proposal/discussion/:identifier': redirectRoute(
+              (attrs) => `/discussion/${attrs.identifier}`
+            ),
             '/proposal/:identifier': importRoute(
               'views/pages/view_proposal/index',
               { scoped: true }
@@ -782,6 +785,7 @@ Promise.all([$.ready, $.get('/api/domain')]).then(
             ),
 
             // Redirects
+
             '/:scope/dashboard': redirectRoute(() => '/'),
             '/:scope/notifications': redirectRoute(() => '/notifications'),
             '/:scope/notification-settings': redirectRoute(
@@ -889,6 +893,9 @@ Promise.all([$.ready, $.get('/api/domain')]).then(
             }),
             // Scoped routes
             //
+            '/:scope/proposal/discussion/:identifier': redirectRoute(
+              (attrs) => `/${attrs.scope}/discussion/${attrs.identifier}`
+            ),
 
             // Notifications
             '/:scope/notifications': importRoute(
@@ -899,18 +906,6 @@ Promise.all([$.ready, $.get('/api/domain')]).then(
             '/notification-settings': importRoute(
               'views/pages/notification_settings',
               { scoped: true, deferChain: true }
-            ),
-            // CMN
-            '/:scope/projects': importRoute(
-              'views/pages/commonwealth/projects',
-              { scoped: true }
-            ),
-            '/:scope/backers': importRoute('views/pages/commonwealth/backers', {
-              scoped: true,
-            }),
-            '/:scope/collectives': importRoute(
-              'views/pages/commonwealth/collectives',
-              { scoped: true }
             ),
             // NEAR
             '/:scope/finishNearLogin': importRoute(

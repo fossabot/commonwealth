@@ -1,13 +1,14 @@
 import { Request, Response, NextFunction } from 'express';
 import proposalIdToEntity from '../../util/proposalIdToEntity';
 import Errors from './errors';
-import { AppError, ServerError } from '../../util/errors';
+import { AppError, ServerError } from 'common-common/src/errors';
 import { factory, formatFilename } from 'common-common/src/logging';
+import { DB } from "../../models";
 
 const log = factory.getLogger(formatFilename(__filename));
 
 export default async (
-  models,
+  models: DB,
   req: Request,
   res: Response,
   next: NextFunction
@@ -26,6 +27,7 @@ export default async (
     return next(new AppError(Errors.InvalidNotificationCategory));
   }
 
+
   let obj;
   const parsed_object_id = req.body.object_id.split(/-|_/);
   const p_id = parsed_object_id[1];
@@ -41,6 +43,17 @@ export default async (
       });
       if (chain) {
         obj = { chain_id: p_entity };
+      }
+      break;
+    }
+    case 'snapshot-proposal': {
+      const proposal = await models.SnapshotProposal.findOne({
+        where: {
+          id: Number(p_id),
+        },
+      });
+      if (proposal) {
+        obj = { proposal_id: proposal.id };
       }
       break;
     }
@@ -61,16 +74,17 @@ export default async (
       } else {
         if (!req.body.chain_id)
           return next(new AppError(Errors.ChainRequiredForEntity));
-        const chainEntity = await proposalIdToEntity(
-          models,
-          req.body.chain_id,
-          req.body.object_id
-        );
-        if (!chainEntity) return next(new AppError(Errors.NoChainEntity));
-        obj = { chain_id: chainEntity.chain, chain_entity_id: chainEntity.id };
+        const chainEntityMeta = await models.ChainEntityMeta.findOne({
+          where: {
+            ce_id: req.body.chain_entity_id
+          }
+        });
+        if (!chainEntityMeta) return next(new AppError(Errors.NoChainEntity));
+        obj = { chain_id: chainEntityMeta.chain, chain_entity_id: chainEntityMeta.ce_id };
       }
       break;
     }
+
     case 'new-mention':
       return next(new AppError(Errors.NoMentions));
     case 'chain-event': {
