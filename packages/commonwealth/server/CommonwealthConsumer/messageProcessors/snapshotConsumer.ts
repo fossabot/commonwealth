@@ -15,52 +15,66 @@ export async function processSnapshotMessage(
   log.info(JSON.stringify(data));
 
   const eventType = data.event;
-  let proposal = await this.models.SnapshotProposal.findOne({
-    where: { id: data.id },
-  });
 
-  await this.models.SnapshotSpace.findOrCreate({
-    where: { snapshot_space: space },
-  });
-
-  if (eventType === 'proposal/created' && proposal) {
-    log.error(`Proposal already exists, cannot create`);
-    return;
-  }
-
-  if (!proposal) {
-    proposal = await this.models.SnapshotProposal.create({
-      id,
-      title,
-      body,
-      choices,
-      space,
-      start,
-      expire,
+  try {
+    let proposal = await this.models.SnapshotProposal.findOne({
+      where: { id: data.id },
     });
-  }
 
-  StatsDController.get().increment('cw.created_snapshot_proposal_record', 1, {
-    event: eventType,
-    space,
-  });
+    await this.models.SnapshotSpace.findOrCreate({
+      where: { snapshot_space: space },
+    });
 
-  if (eventType === 'proposal/deleted') {
-    log.info(`Proposal deleted, deleting record`);
-    await proposal.destroy();
+    if (eventType === 'proposal/created' && proposal) {
+      log.error(`Proposal already exists, cannot create`);
+      return;
+    }
 
-    StatsDController.get().increment('cw.deleted_snapshot_proposal_record', 1, {
+    if (!proposal) {
+      proposal = await this.models.SnapshotProposal.create({
+        id,
+        title,
+        body,
+        choices,
+        space,
+        start,
+        expire,
+      });
+    }
+
+    StatsDController.get().increment('cw.created_snapshot_proposal_record', 1, {
       event: eventType,
       space,
     });
+
+    if (eventType === 'proposal/deleted') {
+      log.info(`Proposal deleted, deleting record`);
+      await proposal.destroy();
+
+      StatsDController.get().increment(
+        'cw.deleted_snapshot_proposal_record',
+        1,
+        {
+          event: eventType,
+          space,
+        }
+      );
+    }
+  } catch (e) {
+    log.error(e);
   }
 
-  const associatedCommunities =
-    await this.models.CommunitySnapshotSpaces.findAll({
+  let associatedCommunities;
+
+  try {
+    associatedCommunities = await this.models.CommunitySnapshotSpaces.findAll({
       where: { snapshot_space_id: space },
     });
 
-  log.info(`Found ${associatedCommunities.length} associated communities`);
+    log.info(`Found ${associatedCommunities.length} associated communities`);
+  } catch (e) {
+    log.error(e);
+  }
 
   for (const community of associatedCommunities) {
     const communityId = community.chain_id;
