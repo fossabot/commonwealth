@@ -90,6 +90,7 @@ export async function processSnapshotMessage(this: { models: DB }, data: Snapsho
           );
         } catch (e) {
           // TODO: should we NACK the message if sending to discord fails or just rollbar report it and continue?
+          log.error('Error sending snapshot notification to discord bot', e);
           console.log(
             'Error sending snapshot notification to discord bot',
             e
