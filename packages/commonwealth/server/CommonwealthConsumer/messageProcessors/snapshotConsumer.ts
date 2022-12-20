@@ -61,7 +61,7 @@ export async function processSnapshotMessage(
       );
     }
   } catch (e) {
-    log.info("Yeeee haw 1")
+    console.log("Yeee haw 1:", e);
     log.error(e);
   }
 
@@ -74,7 +74,7 @@ export async function processSnapshotMessage(
 
     log.info(`Found ${associatedCommunities.length} associated communities`);
   } catch (e) {
-    log.info("Yeee haw 2")
+    console.log("Yeee haw 1:", e);
     log.error(e);
   }
 
