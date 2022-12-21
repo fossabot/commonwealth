@@ -11,72 +11,52 @@ export async function processSnapshotMessage(
   const log = factory.getLogger(formatFilename(__filename));
   const { space, id, title, body, choices, start, expire } = data;
 
-  log.info(`Processed message: `);
-  log.info(JSON.stringify(data));
-
   const eventType = data.event;
+  let proposal = await this.models.SnapshotProposal.findOne({
+    where: { id: data.id },
+  });
 
-  try {
-    let proposal = await this.models.SnapshotProposal.findOne({
-      where: { id: data.id },
+  await this.models.SnapshotSpace.findOrCreate({
+    where: { snapshot_space: space },
+  });
+
+  if (eventType === 'proposal/created' && proposal) {
+    log.info(`Proposal ${id} already exists`);
+    return;
+  }
+
+  if (!proposal) {
+    proposal = await this.models.SnapshotProposal.create({
+      id,
+      title,
+      body,
+      choices,
+      space,
+      start,
+      expire,
+      event: eventType,
     });
+  }
 
-    await this.models.SnapshotSpace.findOrCreate({
-      where: { snapshot_space: space },
-    });
+  StatsDController.get().increment('cw.created_snapshot_proposal_record', 1, {
+    event: eventType,
+    space,
+  });
 
-    if (eventType === 'proposal/created' && proposal) {
-      log.error(`Proposal already exists, cannot create`);
-      return;
-    }
+  if (eventType === 'proposal/deleted') {
+    log.info(`Proposal deleted, deleting record`);
+    await proposal.destroy();
 
-    if (!proposal) {
-      proposal = await this.models.SnapshotProposal.create({
-        id,
-        title,
-        body,
-        choices,
-        space,
-        start,
-        expire,
-      });
-    }
-
-    StatsDController.get().increment('cw.created_snapshot_proposal_record', 1, {
+    StatsDController.get().increment('cw.deleted_snapshot_proposal_record', 1, {
       event: eventType,
       space,
     });
-
-    if (eventType === 'proposal/deleted') {
-      log.info(`Proposal deleted, deleting record`);
-      await proposal.destroy();
-
-      StatsDController.get().increment(
-        'cw.deleted_snapshot_proposal_record',
-        1,
-        {
-          event: eventType,
-          space,
-        }
-      );
-    }
-  } catch (e) {
-    console.log("Yeee haw 1:", e);
-    log.error('Error processing snapshot message: ', e);
   }
 
-  let associatedCommunities;
-
-  try {
-    associatedCommunities = await this.models.CommunitySnapshotSpaces.findAll({
+  const associatedCommunities =
+    await this.models.CommunitySnapshotSpaces.findAll({
       where: { snapshot_space_id: space },
     });
-
-    log.info(`Found ${associatedCommunities.length} associated communities`);
-  } catch (e) {
-    console.log("Yeee haw 1:", e);
-    log.error('Failed to find associated communities', e);
-  }
 
   for (const community of associatedCommunities) {
     const communityId = community.chain_id;
@@ -86,13 +66,10 @@ export async function processSnapshotMessage(
       },
     });
 
-    log.info('Found discord config');
-
     for (const config of communityDiscordConfig) {
       if (config.snapshot_channel_id) {
         // Pass data to Discord bot
         try {
-          log.info(`Sending snapshot notification to discord bot`);
           await axios.post(
             `${process.env.DISCORD_BOT_URL}/send-snapshot-notification`,
             {
@@ -118,11 +95,8 @@ export async function processSnapshotMessage(
           );
         } catch (e) {
           // TODO: should we NACK the message if sending to discord fails or just rollbar report it and continue?
-          log.error('Error sending snapshot notification to discord bot', e);
-          console.log(
-            'Error sending snapshot notification to discord bot',
-            e
-          );
+          log.error('Error sending snapshot notification to discord', e);
+          console.log('Error sending snapshot notification to discord bot', e);
         }
       }
     }
