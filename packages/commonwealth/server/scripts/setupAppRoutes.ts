@@ -39,6 +39,8 @@ const setupAppRoutes = (app, models: DB, devMiddleware, templateFile, sendFile) 
  
   const renderWithMetaTags = (res, title, description, author, image) => {
     image = cleanMalformedUrl(image);
+    // add a dummy param onto the end of the url to force twitter to update the card
+    image = `${image}?foo=bar`;
 
     description = description || `${title}: a decentralized community on Commonwealth.im.`;
     const $tmpl = cheerio.load(templateFile);
@@ -68,6 +70,8 @@ const setupAppRoutes = (app, models: DB, devMiddleware, templateFile, sendFile) 
       '<meta name="twitter:image" content="$1">'
     );
 
+
+    log.info(`rendering metadata: ${twitterSafeHtml}`);
     res.send(twitterSafeHtml);
   };
 
