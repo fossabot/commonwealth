@@ -62,12 +62,7 @@ async function main() {
   const SHOULD_ADD_MISSING_DECIMALS_TO_TOKENS =
     process.env.SHOULD_ADD_MISSING_DECIMALS_TO_TOKENS === 'true';
 
-<<<<<<< HEAD
-  const NO_TOKEN_BALANCE_CACHE =
-    process.env.NO_TOKEN_BALANCE_CACHE === 'true';
-=======
   const NO_TOKEN_BALANCE_CACHE = process.env.NO_TOKEN_BALANCE_CACHE === 'true';
->>>>>>> alex.snapshot-everything
   const NO_GLOBAL_ACTIVITY_CACHE =
     process.env.NO_GLOBAL_ACTIVITY_CACHE === 'true';
   const NO_CLIENT_SERVER =
