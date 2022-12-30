@@ -57,7 +57,6 @@ export class CommentReactionButton extends ClassComponent<CommentReactionButtonA
         return r.Address.address === activeAddress;
       });
 
-      await app.sessions.ensureSessionIsValid();
       const { signature } = await app.sessions.signDeleteCommentReaction({ id: reaction.canvasId });
 
       this.loading = true;
@@ -77,7 +76,6 @@ export class CommentReactionButton extends ClassComponent<CommentReactionButtonA
     };
 
     const like = async (chain: ChainInfo, chainId: string, userAddress: string) => {
-      await app.sessions.ensureSessionIsValid();
       const { session, action, hash } = await app.sessions.signCommentReaction({ commentId: comment.id, like: true });
 
       this.loading = true;

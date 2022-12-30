@@ -54,7 +54,6 @@ export class ThreadPreviewReactionButton extends ClassComponent<ThreadPreviewRea
         return r.Address.address === activeAddress;
       });
 
-      await app.sessions.ensureSessionIsValid();
       const { signature } = await app.sessions.signDeleteThreadReaction({
         id: reaction.canvasId
       });

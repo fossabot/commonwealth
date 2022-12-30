@@ -61,7 +61,6 @@ export class NewThreadForm extends ClassComponent<NewThreadFormAttrs> {
     quillEditorState.disable();
     checkNewThreadErrors(form, body);
 
-    await app.sessions.ensureSessionIsValid();
     const { session, action, hash } = await app.sessions.signThread({
       community: app.activeChainId(),
       title: form.title,

@@ -65,8 +65,6 @@ export class CreateComment extends ClassComponent<CreateCommmentAttrs> {
       const commentText = this.quillEditorState.textContentsAsString;
       const chainId = app.activeChainId();
 
-      await app.sessions.ensureSessionIsValid();
-
       this.error = null;
 
       this.sendingComment = true;

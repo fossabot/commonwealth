@@ -56,7 +56,6 @@ export class ThreadReactionButton extends ClassComponent<ThreadReactionButtonAtt
         return r.Address.address === activeAddress;
       });
 
-      await app.sessions.ensureSessionIsValid();
       const { signature } = await app.sessions.signDeleteThreadReaction({ id: reaction.canvasId });
 
       this.loading = true;
@@ -76,7 +75,6 @@ export class ThreadReactionButton extends ClassComponent<ThreadReactionButtonAtt
     };
 
     const like = async (chain: ChainInfo, chainId: string, userAddress: string) => {
-      await app.sessions.ensureSessionIsValid();
       const { session, action, hash } = await app.sessions.signThreadReaction({ threadId: thread.id, like: true });
 
       this.loading = true;
