@@ -7,7 +7,7 @@ import wallet from 'ethereumjs-wallet';
 import { signTypedData, SignTypedDataVersion } from '@metamask/eth-sig-util';
 import app, { resetDatabase } from '../../../server-test';
 import * as modelUtils from '../../util/modelUtils';
-import { constructTypedCanvasMessage, TEST_BLOCK_INFO_STRING } from '../../../shared/adapters/chain/ethereum/keys';
+import { constructTypedCanvasMessage, TEST_BLOCK_INFO_STRING, TEST_BLOCK_INFO_BLOCKHASH } from '../../../shared/adapters/chain/ethereum/keys';
 import { constructCanvasMessage } from 'shared/adapters/shared';
 
 chai.use(chaiHttp);
@@ -55,7 +55,7 @@ describe('API Tests', () => {
       const chain_id = '1'; // use ETH mainnet for testing
       const sessionWallet = ethers.Wallet.createRandom();
       const timestamp = 1665083987891;
-      const message = constructCanvasMessage("eth", chain_id, address, sessionWallet.address, timestamp, TEST_BLOCK_INFO_STRING);
+      const message = constructCanvasMessage("eth", chain_id, address, sessionWallet.address, timestamp, TEST_BLOCK_INFO_BLOCKHASH);
       const data = constructTypedCanvasMessage(message);
       const privateKey = keypair.getPrivateKey();
       const signature = signTypedData({ privateKey, data: msgParams, version: SignTypedDataVersion.V4 });

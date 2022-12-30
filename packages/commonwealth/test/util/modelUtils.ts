@@ -15,7 +15,7 @@ import { BalanceProvider, IChainNode } from 'token-balance-cache/src/index';
 import app from '../../server-test';
 import models from '../../server/database';
 import { Permission } from '../../server/models/role';
-import { constructTypedCanvasMessage, TEST_BLOCK_INFO_STRING } from '../../shared/adapters/chain/ethereum/keys';
+import { constructTypedCanvasMessage, TEST_BLOCK_INFO_STRING, TEST_BLOCK_INFO_BLOCKHASH } from '../../shared/adapters/chain/ethereum/keys';
 import { constructCanvasMessage } from 'shared/adapters/shared';
 import { Action } from '../../../common-common/src/permissions';
 import { mnemonicGenerate } from '@polkadot/util-crypto';
@@ -105,7 +105,7 @@ export const createAndVerifyAddress = async ({ chain }, mnemonic = 'Alice') => {
     const sessionWallet = sessionKeyring.addFromUri(mnemonicGenerate(), {}, 'ed25519');
     const chain_id = ChainNetwork.Edgeware
     const timestamp = 1665083987891
-    const message = constructCanvasMessage("eth", chain_id, address, sessionWallet.address, TEST_BLOCK_INFO_STRING);
+    const message = constructCanvasMessage("eth", chain_id, address, sessionWallet.address, TEST_BLOCK_INFO_BLOCKHASH);
 
     const signature = keyPair.sign(stringToU8a(JSON.stringify(message)))
 

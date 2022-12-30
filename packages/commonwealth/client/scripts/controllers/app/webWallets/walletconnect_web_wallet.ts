@@ -62,7 +62,6 @@ class WalletConnectWebWalletController implements IWebWallet<string> {
       JSON.stringify(typedCanvasMessage),
     ]);
     const chainId = (app.chain?.meta.node.ethChainId || 1).toString();
-    app.sessions.authSession(this.chain, chainId, sessionPayload, signature)
     return signature;
   }
 

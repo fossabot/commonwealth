@@ -13,15 +13,14 @@ export interface ICompletable extends IIdentifiable {
 
 export const constructCanvasMessage = (
   chain: CanvasChain,
-  chainId: number | string, // commonwealth chainID
+  chainId: number | string, // Commonwealth chainID, not Canvas chainID. Must be cast to string.
   fromAddress: string,
   sessionPublicAddress: string,
   timestamp: number,
-  validationBlockInfoString: string | null
+  blockhash: string | null
 ): SessionPayload => {
   // This will be replaced with an IPFS hash after turning on peering
   const placeholderMultihash = '/commonwealth'; // TODO
-  const validationBlockInfo = validationBlockInfoString && JSON.parse(validationBlockInfoString)
 
   // Not all data here is used. For chains without block data
   // like Solana/Polkadot, timestamp is left blank in session login.
@@ -34,7 +33,7 @@ export const constructCanvasMessage = (
     address: sessionPublicAddress,
     duration: (86400 * 1000).toString(),
     timestamp: timestamp.toString(),
-    blockhash: validationBlockInfo ? validationBlockInfo.hash : null,
+    blockhash: blockhash ?? null,
     chain: chain,
     chainId: chainId.toString(),
   };

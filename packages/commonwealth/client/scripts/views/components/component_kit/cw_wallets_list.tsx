@@ -9,6 +9,7 @@ import { ChainBase, ChainNetwork } from 'common-common/src/types';
 import 'components/component_kit/cw_wallets_list.scss';
 
 import { Account, AddressInfo, IWebWallet } from 'models';
+import { signSessionWithAccount, getSessionSigningTimestamp } from 'controllers/server/sessions';
 import { notifyInfo } from 'controllers/app/notifications';
 import { createUserWithAddress } from 'controllers/app/login';
 import Near from 'controllers/chain/near/adapter';
@@ -184,20 +185,26 @@ export class CWWalletsList extends ClassComponent<WalletsListAttrs> {
     // We call handleNormalWalletLogin if we're using connecting a new wallet, and
     // handleSessionKeyRevalidation if we're regenerating a session key.
     async function handleSessionKeyRevalidation(wallet: IWebWallet<any>, address: string) {
-      const sessionPublicAddress = await app.sessions.getOrCreateAddress(wallet.chain, wallet.getChainId());
+      const timestamp = getSessionSigningTimestamp();
+
+      const sessionPublicAddress = await app.sessions.getOrCreateAddress(wallet.chain, wallet.getChainId().toString());
       const chainIdentifier = app.chain?.id || wallet.defaultNetwork;
-      const validationBlockInfo = await wallet.getRecentBlock();
-      const { account, newlyCreated } =
-        await createUserWithAddress(
-          address,
-          wallet.name,
-          chainIdentifier,
-          sessionPublicAddress,
-          validationBlockInfo
-        );
-      const signature = await wallet.signWithAccount(account);
-      await wallet.validateWithAccount(account, signature);
-      accountVerifiedCallback(account);
+      const validationBlockInfo = await wallet.getRecentBlock(chainIdentifier);
+
+      // Start the create-user flow, so validationBlockInfo gets saved to the backend
+      // This creates a new `Account` object with fields set up to be validated by verifyAddress.
+      const { account } = await createUserWithAddress(
+        address,
+        wallet.name,
+        chainIdentifier,
+        sessionPublicAddress,
+        validationBlockInfo
+      );
+      account.setValidationBlockInfo(JSON.stringify(validationBlockInfo));
+
+      const { chainId, sessionPayload, signature } = await signSessionWithAccount(wallet, account, timestamp);
+      await account.validate(signature, timestamp, chainId);
+      app.sessions.authSession(wallet.chain, chainId, sessionPayload, signature)
     }
     async function handleNormalWalletLogin(wallet: IWebWallet<any>, address: string) {
       if (app.isLoggedIn()) {
@@ -227,7 +234,7 @@ export class CWWalletsList extends ClassComponent<WalletsListAttrs> {
       }
 
       try {
-        const sessionPublicAddress = await app.sessions.getOrCreateAddress(wallet.chain, wallet.getChainId());
+        const sessionPublicAddress = await app.sessions.getOrCreateAddress(wallet.chain, wallet.getChainId().toString());
         const chainIdentifier = app.chain?.id || wallet.defaultNetwork;
         const validationBlockInfo = wallet.getRecentBlock && await wallet.getRecentBlock(chainIdentifier);
         const { account: signerAccount, newlyCreated } =

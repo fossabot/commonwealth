@@ -88,7 +88,7 @@ const verifySignature = async (
     addressModel.address,
     sessionPublicAddress,
     sessionTimestamp,
-    addressModel.block_info!
+    addressModel.block_info ? JSON.parse(addressModel.block_info).hash : null,
   );
 
   let isValid: boolean;
@@ -378,6 +378,7 @@ const processAddress = async (
   if (!existingAddress) {
     throw new AppError(Errors.AddressNF);
   }
+
   if (existingAddress.wallet_id !== wallet_id) {
     throw new AppError(Errors.WrongWallet);
   }

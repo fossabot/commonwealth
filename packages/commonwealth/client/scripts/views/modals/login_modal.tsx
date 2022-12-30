@@ -6,7 +6,6 @@ import app from 'state';
 import $ from 'jquery';
 import _ from 'underscore';
 
-import { constructCanvasMessage, chainBaseToCanvasChain, chainBaseToCanvasChainId } from 'adapters/shared';
 import { initAppState } from 'app';
 import {
   completeClientLogin,
@@ -16,6 +15,7 @@ import {
 import TerraWalletConnectWebWalletController from 'controllers/app/webWallets/terra_walletconnect_web_wallet';
 import WalletConnectWebWalletController from 'controllers/app/webWallets/walletconnect_web_wallet';
 import { notifyError } from 'controllers/app/notifications';
+import { signSessionWithAccount, getSessionSigningTimestamp } from 'controllers/server/sessions';
 import { Account, IWebWallet } from 'models';
 import { ChainBase } from 'common-common/src/types';
 import {
@@ -36,34 +36,6 @@ type LoginModalAttrs = {
   onSuccess?: () => void;
 };
 
-
-export function getSessionSigningTimestamp(): number {
-  return (new Date()).getTime();
-}
-
-async function signWithWallet<T extends { address: string }>(wallet: IWebWallet<T>, account: Account, timestamp: number) {
-  // We don't know what chain_id the wallet is using to sign messages,
-  // because we might be on a multi-chain page, or the wallet might
-  // be configured to a different chain than expected.
-  //
-  // So we ask WebWallet for the correct ID by calling getChainId(),
-  // and pass it to the backend, for validation.
-  const canvasChain = chainBaseToCanvasChain(wallet.chain);
-  const canvasChainId = wallet.getChainId().toString();
-  const sessionPublicAddress = await app.sessions.getOrCreateAddress(wallet.chain, canvasChainId);
-
-  const canvasMessage = constructCanvasMessage(
-    canvasChain,
-    canvasChainId,
-    account.address,
-    sessionPublicAddress,
-    timestamp,
-    account.validationBlockInfo,
-  );
-
-  const signature = await wallet.signCanvasMessage(account, canvasMessage);
-  return { signature, chainId: canvasChainId };
-}
 
 export class NewLoginModal extends ClassComponent<LoginModalAttrs> {
   private avatarUrl: string;
@@ -243,7 +215,7 @@ export class NewLoginModal extends ClassComponent<LoginModalAttrs> {
       // Handle Logged in and joining community of different chain base
       if (this.currentlyInCommunityPage && app.isLoggedIn()) {
         const timestamp = getSessionSigningTimestamp();
-        const { signature, chainId }  = await signWithWallet(this.selectedWallet, account, timestamp);
+        const { signature, chainId }  = await signSessionWithAccount(this.selectedWallet, account, timestamp);
         await account.validate(signature, timestamp, chainId);
         await logInWithAccount(account, true);
         return;
@@ -271,7 +243,7 @@ export class NewLoginModal extends ClassComponent<LoginModalAttrs> {
       if (!newlyCreated && !linking) {
         try {
           const timestamp = getSessionSigningTimestamp()
-          const { signature, chainId } = await signWithWallet(this.selectedWallet, account, timestamp);
+          const { signature, chainId } = await signSessionWithAccount(this.selectedWallet, account, timestamp);
           await account.validate(signature, timestamp, chainId);
           await logInWithAccount(account, true);
         } catch (e) {
@@ -281,7 +253,7 @@ export class NewLoginModal extends ClassComponent<LoginModalAttrs> {
         if (!linking) {
           try {
             const timestamp = getSessionSigningTimestamp()
-            const { signature, chainId } = await signWithWallet(this.selectedWallet, account, timestamp);
+            const { signature, chainId } = await signSessionWithAccount(this.selectedWallet, account, timestamp);
             this.cachedWalletSignature = signature;
             this.cachedTimestamp = timestamp;
             this.cachedChainId = chainId;
@@ -329,7 +301,7 @@ export class NewLoginModal extends ClassComponent<LoginModalAttrs> {
     const performLinkingCallback = async () => {
       try {
         const secondaryTimestamp = getSessionSigningTimestamp()
-        const { signature: secondarySignature, chainId: secondaryChainId } = await signWithWallet(
+        const { signature: secondarySignature, chainId: secondaryChainId } = await signSessionWithAccount(
           this.selectedLinkingWallet, this.secondaryLinkAccount, secondaryTimestamp);
         await this.secondaryLinkAccount.validate(secondarySignature, secondaryTimestamp, secondaryChainId);
         await this.primaryAccount.validate(this.cachedWalletSignature, this.cachedTimestamp, this.cachedChainId);

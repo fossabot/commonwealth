@@ -108,7 +108,13 @@ class ReactionCountController {
   }
 
   public async delete(reaction, reactionCount: ReactionCount<any>) {
-    const { signature } = await app.sessions.signDeleteReaction({ reaction: reaction.reaction, id: reaction.canvas_hash });
+    const { session, action, hash } =
+      post instanceof Thread
+      ? await app.sessions.signDeleteThreadReaction({ id: reaction.canvas_hash })
+      : post instanceof Proposal
+      ? {}
+      : post instanceof Comment
+      ? await app.sessions.signDeleteCommentReaction({ id: reaction.canvas_hash }) : {};
 
     // TODO Graham 4/24/22: Investigate necessity of this duplication
     const _this = this;

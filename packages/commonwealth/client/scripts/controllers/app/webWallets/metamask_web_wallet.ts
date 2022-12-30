@@ -68,7 +68,6 @@ class MetamaskWebWalletController implements IWebWallet<string> {
       params: [account.address, JSON.stringify(typedCanvasMessage)],
     });
     const chainId = (app.chain?.meta.node.ethChainId || 1).toString();
-    app.sessions.authSession(this.chain, chainId, sessionPayload, signature)
     return signature;
   }
 

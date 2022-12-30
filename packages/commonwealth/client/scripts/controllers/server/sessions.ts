@@ -1,13 +1,35 @@
-import { BlockInfo, IWebWallet } from 'models';
+import { IWebWallet, Account } from 'models';
 import { sessionSigninModal } from 'views/modals/session_signin_modal';
-import { actionToHash, sessionToHash } from "helpers/canvas"
 
-import { Action, ActionArgument, Session, SessionPayload } from "@canvas-js/interfaces";
-import { getActionSignatureData } from "@canvas-js/verifiers"
+import { constructCanvasMessage, chainBaseToCanvasChain, chainBaseToCanvasChainId } from 'adapters/shared';
+import { ActionArgument, SessionPayload } from "@canvas-js/interfaces";
 
 import app from 'state';
 import { ChainBase } from 'common-common/src/types';
 import { ISessionController, EthereumSessionController, SubstrateSessionController, CosmosSDKSessionController, SolanaSessionController, NEARSessionController } from './sessionSigners';
+
+export function getSessionSigningTimestamp(): number {
+  return (new Date()).getTime();
+}
+
+export async function signSessionWithAccount<T extends { address: string }>(wallet: IWebWallet<T>, account: Account, timestamp: number) {
+  // Check the wallet for chain_id because we might be on a multi-chain page
+  const canvasChain = chainBaseToCanvasChain(wallet.chain);
+  const canvasChainId = wallet.getChainId().toString();
+  const sessionPublicAddress = await app.sessions.getOrCreateAddress(wallet.chain, canvasChainId);
+
+  const canvasMessage = constructCanvasMessage(
+    canvasChain,
+    canvasChainId,
+    account.address,
+    sessionPublicAddress,
+    timestamp,
+    account.validationBlockInfo ? JSON.parse(account.validationBlockInfo).hash : null,
+  );
+
+  const signature = await wallet.signCanvasMessage(account, canvasMessage);
+  return { signature, chainId: canvasChainId, sessionPayload: canvasMessage };
+}
 
 class SessionsController {
   ethereum: EthereumSessionController;
@@ -24,7 +46,7 @@ class SessionsController {
     this.near = new NEARSessionController();
   }
 
-  getSessionController(chainBase: ChainBase): ISessionController<any> {
+  getSessionController(chainBase: ChainBase): ISessionController {
     if (chainBase == "ethereum") return this.ethereum;
     else if (chainBase == "substrate") return this.substrate;
     else if (chainBase == "cosmos") return this.cosmos;
@@ -46,7 +68,7 @@ class SessionsController {
   private async sign(
     call: string,
     args: Record<string, ActionArgument>
-  ): Promise<{ session: Session, action: Action, hash: string }> {
+  ): Promise<{ session: string, action: string, hash: string }> {
     const chainBase = app.chain?.base;
     const chainId = app.chain?.meta.node.ethChainId || 1; // TODO: support other chains
 
@@ -59,7 +81,7 @@ class SessionsController {
       })
     }
 
-    const { session, action, hash } = controller.sign(chainId, call, args);
+    const { session, action, hash } = await controller.sign(chainId, call, args);
 
     return {
       session: JSON.stringify(session),
