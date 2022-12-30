@@ -9,8 +9,15 @@ export class SubstrateSessionController implements ISessionController {
   privKeys: Record<string, string> = {};
   pubKeys: Record<string, string> = {};
 
+  private auths: Record<number, { payload: SessionPayload, signature: string }> = {};
+
   getAddress(chainId: string) {
     return this.addresses[chainId];
+  }
+
+  hasAuthenticatedSession(chainId: string): boolean {
+    // TODO: verify
+    return this.signers[chainId] && this.privKeys[chainId];
   }
 
   async getOrCreateAddress(chainId: string): Promise<string> {

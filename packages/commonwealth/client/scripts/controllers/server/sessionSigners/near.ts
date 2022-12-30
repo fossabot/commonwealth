@@ -12,6 +12,11 @@ export class NEARSessionController implements ISessionController {
     return this.addresses[chainId];
   }
 
+  hasAuthenticatedSession(chainId: string): boolean {
+    // TODO: verify
+    return this.signers[chainId] && this.keys[chainId];
+  }
+
   async getOrCreateAddress(chainId: string): Promise<string> {
     await this.getOrCreateSigner(chainId);
     return this.addresses[chainId];

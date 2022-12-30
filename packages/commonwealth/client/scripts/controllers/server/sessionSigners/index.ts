@@ -8,9 +8,9 @@ import type { Action, Session, SessionPayload, ActionArgument } from "@canvas-js
 
 export abstract class ISessionController {
   abstract getAddress(chainId: string): string | null;
-
   abstract getOrCreateAddress(chainId: string): Promise<string>;
 
+  abstract hasAuthenticatedSession(chainId: string): boolean;
   abstract authSession(chainId: string, sessionPayload: SessionPayload, signature: string): void;
 
   abstract sign(chainId: string, call: string, args: Record<string, ActionArgument>): Promise<{

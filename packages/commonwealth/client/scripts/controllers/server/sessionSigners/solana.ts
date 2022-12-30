@@ -11,6 +11,11 @@ export class SolanaSessionController implements ISessionController {
     return this.signers[chainId].publicKey.toBase58();
   }
 
+  hasAuthenticatedSession(chainId: string): boolean {
+    // TODO: verify
+    return this.signers[chainId] && this.auths[chainId];
+  }
+
   async getOrCreateAddress(chainId: string): Promise<string> {
     return (await this.getOrCreateSigner(chainId)).publicKey.toBase58();
   }

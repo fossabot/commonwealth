@@ -35,7 +35,7 @@ class PhantomWebWalletController implements IWebWallet<string> {
   }
 
   public getChainId() {
-    return (app.chain?.id.toString()) ?? "101";
+    return "mainnet";
   }
 
   public async getRecentBlock(chainIdentifier: string) {

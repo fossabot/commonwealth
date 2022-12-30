@@ -54,7 +54,7 @@ const SessionSigninModal = {
 };
 
 export const sessionSigninModal = () => {
-  return new Promise((resolve, reject) => {
+  return new Promise<void>((resolve, reject) => {
     app.modals.create({
       modal: SessionSigninModal,
       data: {},

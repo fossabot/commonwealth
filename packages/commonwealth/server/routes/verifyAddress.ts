@@ -79,7 +79,7 @@ const verifySignature = async (
     return false;
   }
 
-  // Reconstruct the expected canvas message
+  // Reconstruct the expected canvas message.
   const canvasChain = chainBaseToCanvasChain(chain.base);
   const canvasChainId = chainBaseToCanvasChainId(chain.base, chain_id);
   const canvasMessage = constructCanvasMessage(

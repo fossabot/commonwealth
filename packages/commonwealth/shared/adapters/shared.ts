@@ -12,15 +12,15 @@ export interface ICompletable extends IIdentifiable {
 }
 
 export const constructCanvasMessage = (
-  chain: CanvasChain,
-  chainId: number | string, // Commonwealth chainID, not Canvas chainID. Must be cast to string.
+  chain: CanvasChain, // Canvas chain prefix, e.g. "eth"
+  canvasChainId: string, // Canvas chain id, e.g. "1" or "osmo" (Note: CW chain id is 1 or "osmo-1")
   fromAddress: string,
   sessionPublicAddress: string,
   timestamp: number,
   blockhash: string | null
 ): SessionPayload => {
   // This will be replaced with an IPFS hash after turning on peering
-  const placeholderMultihash = '/commonwealth'; // TODO
+  const placeholderMultihash = '/commonwealth';
 
   // Not all data here is used. For chains without block data
   // like Solana/Polkadot, timestamp is left blank in session login.
@@ -35,7 +35,7 @@ export const constructCanvasMessage = (
     timestamp: timestamp.toString(),
     blockhash: blockhash ?? null,
     chain: chain,
-    chainId: chainId.toString(),
+    chainId: canvasChainId,
   };
 
   return payload;
@@ -56,23 +56,31 @@ export function chainBaseToCanvasChain(chainBase: ChainBase): CanvasChain {
   }
 }
 
-export function chainBaseToCanvasChainId(chainBase: ChainBase, chainId: string | number): string {
-  // Translate Commonwealth ChainBase/ChainNode to Canvas ChainIDs.
+interface IChainNodeish {
+  ethChainId?: string | number;
+}
+interface IChainish {
+  bech32Prefix: string;
+  node: IChainNodeish;
+}
+
+export function chainBaseToCanvasChainId(chainBase: ChainBase, idOrPrefix: string | number): string {
+  // The Canvas chain id is a stringified ETH chain ID, or Cosmos bech32 prefix, or equivalent.
   if (chainBase === ChainBase.CosmosSDK) {
-    return chainId.toString();
+    return idOrPrefix.toString();
   } else if (chainBase === ChainBase.Ethereum) {
-    return chainId.toString();
+    return idOrPrefix.toString();
   } else if (chainBase === ChainBase.NEAR) {
-    // Temporarily locked to mainnet, but eventually should support: mainnet, testnet, betanet, localnet
+    // Temporarily locked to mainnet
     // See also: client/scripts/views/pages/finish_near_login.tsx
     return "mainnet";
   } else if (chainBase === ChainBase.Solana) {
-    // Temporarily locked to mainnet, but eventually should support: 101, 102, 103
+    // Temporarily locked to mainnet
     // See also: client/scripts/controllers/app/webWallets/phantom_web_wallet.ts
-    return "101";
+    return "mainnet";
   } else if (chainBase === ChainBase.Substrate) {
-    // Temporarily locked to edgeware, but eventually should support Substrate chains by id
+    // Temporarily locked to edgeware, but eventually should support Substrate chains by ID
     // See also: client/scripts/controllers/app/webWallets/polkadot_web_wallet.ts
-    return "edgeware"; // Not well defined, should we store Substrate metadata on Chain objects?
+    return "edgeware";
   }
 }

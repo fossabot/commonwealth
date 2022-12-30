@@ -12,6 +12,11 @@ export class EthereumSessionController implements ISessionController {
     return this.signers[chainId]?.address;
   }
 
+  hasAuthenticatedSession(chainId: string): boolean {
+    // TODO: verify
+    return this.signers[chainId] && this.auths[chainId];
+  }
+
   async getOrCreateAddress(chainId: string): Promise<string> {
     return (await this.getOrCreateSigner(chainId)).address;
   }
@@ -29,15 +34,18 @@ export class EthereumSessionController implements ISessionController {
       return this.signers[chainId];
     }
     const storageKey = `CW_SESSIONS-eth-${chainId}`;
+    const authStorageKey = `CW_SESSIONS-eth-${chainId}-auth`
     try {
       const storage = localStorage.getItem(storageKey);
       const { privateKey } = JSON.parse(storage);
       this.signers[chainId] = new ethers.Wallet(privateKey);
 
-      const authStorageKey = `CW_SESSIONS-eth-${chainId}-auth`
+      // TODO: validate
       const auth = localStorage.getItem(authStorageKey);
-      const { payload, signature }: { payload: SessionPayload, signature: string } = JSON.parse(auth);
-      this.auths[chainId] = { payload, signature };
+      if (auth !== null) {
+        const { payload, signature }: { payload: SessionPayload, signature: string } = JSON.parse(auth);
+        this.auths[chainId] = { payload, signature };
+      }
     } catch (err) {
       this.signers[chainId] = ethers.Wallet.createRandom();
       delete this.auths[chainId]

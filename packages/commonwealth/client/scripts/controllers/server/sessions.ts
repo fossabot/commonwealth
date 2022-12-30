@@ -13,9 +13,16 @@ export function getSessionSigningTimestamp(): number {
 }
 
 export async function signSessionWithAccount<T extends { address: string }>(wallet: IWebWallet<T>, account: Account, timestamp: number) {
-  // Check the wallet for chain_id because we might be on a multi-chain page
+  // Try to infer Chain ID from the currently active chain.
+  // `chainBaseToCanvasChainId` will replace idOrPrefix with the
+  // appropriate chainID for non-eth, non-cosmos chains.
+  //
+  // However, also handle the case where app.chain is empty.
+  const idOrPrefix = wallet.chain === ChainBase.CosmosSDK
+    ? (app.chain.meta.bech32Prefix || 'cosmos')
+    : (app.chain.meta.node?.ethChainId || 1);
   const canvasChain = chainBaseToCanvasChain(wallet.chain);
-  const canvasChainId = wallet.getChainId().toString();
+  const canvasChainId = chainBaseToCanvasChainId(wallet.chain, idOrPrefix);
   const sessionPublicAddress = await app.sessions.getOrCreateAddress(wallet.chain, canvasChainId);
 
   const canvasMessage = constructCanvasMessage(
@@ -70,11 +77,18 @@ class SessionsController {
     args: Record<string, ActionArgument>
   ): Promise<{ session: string, action: string, hash: string }> {
     const chainBase = app.chain?.base;
-    const chainId = app.chain?.meta.node.ethChainId || 1; // TODO: support other chains
+
+    // Try to infer Chain ID from the currently active chain. Note that
+    // `chainBaseToCanvasChainId` replaces idOrPrefix with the appropriate
+    // chainID for non-eth, non-cosmos chains.
+    const idOrPrefix = chainBase == ChainBase.CosmosSDK
+      ? app.chain.meta.bech32Prefix
+      : app.chain.meta.node?.ethChainId;
+    const chainId = chainBaseToCanvasChainId(chainBase, idOrPrefix);
 
     // Try to request a new session from the user, if one was not found.
     const controller = this.getSessionController(chainBase);
-    if (controller.getAddress(chainId) === undefined) {
+    if (!controller.hasAuthenticatedSession(chainId)) {
       await sessionSigninModal().catch((err) => {
         console.log('Login failed')
         throw err
