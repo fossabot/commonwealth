@@ -109,11 +109,11 @@ class ReactionCountController {
 
   public async delete(reaction, reactionCount: ReactionCount<any>) {
     const { session, action, hash } =
-      post instanceof Thread
+      reaction.thread_id
       ? await app.sessions.signDeleteThreadReaction({ id: reaction.canvas_hash })
-      : post instanceof Proposal
+      : reaction.proposal_id
       ? {}
-      : post instanceof Comment
+      : reaction.comment_id
       ? await app.sessions.signDeleteCommentReaction({ id: reaction.canvas_hash }) : {};
 
     // TODO Graham 4/24/22: Investigate necessity of this duplication
@@ -122,6 +122,9 @@ class ReactionCountController {
       await $.post(`${app.serverUrl()}/deleteReaction`, {
         jwt: app.user.jwt,
         reaction_id: reaction.id,
+        canvas_action: action,
+        canvas_session: session,
+        canvas_hash: hash,
       });
       _this.store.update(reactionCount);
       if (reactionCount.likes === 0 && reactionCount.dislikes === 0) {

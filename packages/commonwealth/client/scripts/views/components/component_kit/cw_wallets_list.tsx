@@ -205,6 +205,11 @@ export class CWWalletsList extends ClassComponent<WalletsListAttrs> {
       const { chainId, sessionPayload, signature } = await signSessionWithAccount(wallet, account, timestamp);
       await account.validate(signature, timestamp, chainId);
       app.sessions.authSession(wallet.chain, chainId, sessionPayload, signature)
+      console.log('Started new session for', wallet.chain, chainId);
+
+      const newlyCreated = false;
+      const linking = false;
+      accountVerifiedCallback(account, newlyCreated, linking);
     }
     async function handleNormalWalletLogin(wallet: IWebWallet<any>, address: string) {
       if (app.isLoggedIn()) {
