@@ -82,7 +82,7 @@ export class EthereumSessionController implements ISessionController {
       session: sessionPayload.from,
       signature,
     }
-    const hash = actionToHash(action).toString();
+    const hash = Buffer.from(actionToHash(action)).toString('hex');
 
     return { session, action, hash };
   }

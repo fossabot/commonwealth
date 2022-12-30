@@ -58,7 +58,14 @@ class SessionsController {
         throw err
       })
     }
-    return controller.sign(chainId, call, args);
+
+    const { session, action, hash } = controller.sign(chainId, call, args);
+
+    return {
+      session: JSON.stringify(session),
+      action: JSON.stringify(action),
+      hash,
+    }
   }
 
   // Public signer methods
