@@ -17,7 +17,7 @@ export class SubstrateSessionController implements ISessionController {
 
   hasAuthenticatedSession(chainId: string): boolean {
     // TODO: verify
-    return this.signers[chainId] && this.privKeys[chainId];
+    return this.signers[chainId] !== undefined && this.privKeys[chainId] !== undefined;
   }
 
   async getOrCreateAddress(chainId: string): Promise<string> {

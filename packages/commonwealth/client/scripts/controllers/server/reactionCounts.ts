@@ -90,9 +90,9 @@ class ReactionCountController {
           comment_id,
           has_reacted: true,
           like: 1,
-          canvas_action,
-          canvas_session,
-          canvas_hash,
+          canvas_action: action,
+          canvas_session: session,
+          canvas_hash: hash,
         };
         this.store.add(modelFromServer(rc));
       } else {
