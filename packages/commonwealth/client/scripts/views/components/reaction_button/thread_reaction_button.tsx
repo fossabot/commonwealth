@@ -7,7 +7,7 @@ import 'components/reaction_button/comment_reaction_button.scss';
 
 import app from 'state';
 import TopicGateCheck from 'controllers/chain/ethereum/gatedTopic';
-import { Thread, ChainInfo } from 'models';
+import { Thread, ChainInfo, Reaction } from 'models';
 import {
   fetchReactionsByPost,
   getDisplayedReactorsForPopup,
@@ -52,11 +52,13 @@ export class ThreadReactionButton extends ClassComponent<ThreadReactionButtonAtt
     const activeAddress = app.user.activeAccount?.address;
 
     const dislike = async (userAddress: string) => {
-      const reaction = (await fetchReactionsByPost(thread)).find((r) => {
+      const reaction: Reaction<Thread> = (await fetchReactionsByPost(thread)).find((r) => {
         return r.Address.address === activeAddress;
       });
 
-      const { signature } = await app.sessions.signDeleteThreadReaction({ id: reaction.canvasId });
+      const { session, action, hash } = await app.sessions.signDeleteThreadReaction({ 
+        thread_id: reaction.canvasHash
+      });
 
       this.loading = true;
       app.reactionCounts
@@ -75,7 +77,10 @@ export class ThreadReactionButton extends ClassComponent<ThreadReactionButtonAtt
     };
 
     const like = async (chain: ChainInfo, chainId: string, userAddress: string) => {
-      const { session, action, hash } = await app.sessions.signThreadReaction({ threadId: thread.id, like: true });
+      const { session, action, hash } = await app.sessions.signThreadReaction({ 
+        thread_id: thread.id, 
+        like: true 
+      });
 
       this.loading = true;
       app.reactionCounts

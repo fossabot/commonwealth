@@ -163,8 +163,8 @@ type WalletsListAttrs = {
   ) => void;
   setSelectedWallet: (wallet: IWebWallet<any>) => void;
   linking?: boolean;
-  useSessionKeyLoginFlow: boolean;
-  hideConnectAnotherWayLink: boolean;
+  useSessionKeyLoginFlow?: boolean;
+  hideConnectAnotherWayLink?: boolean;
 };
 
 export class CWWalletsList extends ClassComponent<WalletsListAttrs> {

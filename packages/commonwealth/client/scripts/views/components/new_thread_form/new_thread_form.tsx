@@ -66,7 +66,7 @@ export class NewThreadForm extends ClassComponent<NewThreadFormAttrs> {
       title: form.title,
       body,
       link: form.url,
-      topic: form.topicName,
+      topic: form.topic.id,
     });
 
     try {
