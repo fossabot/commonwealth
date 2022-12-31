@@ -12,7 +12,6 @@ export class SolanaSessionController implements ISessionController {
   }
 
   hasAuthenticatedSession(chainId: string): boolean {
-    // TODO: verify
     return this.signers[chainId] !== undefined && this.auths[chainId] !== undefined;
   }
 
@@ -21,7 +20,10 @@ export class SolanaSessionController implements ISessionController {
   }
 
   async authSession(chainId: string, sessionPayload: SessionPayload, signature: string) {
-    // TODO
+    // TODO: verify signature key matches this.signers[chainId]
+    // TODO: verify signature is valid
+    // TODO: verify payload datetime is valid
+
     throw new Error("unimplemented")
   }
 
@@ -35,6 +37,9 @@ export class SolanaSessionController implements ISessionController {
       const { privateKey }: { privateKey: string } = JSON.parse(storage);
       this.signers[chainId] = solw3.Keypair.fromSecretKey(bs58.decode(privateKey));
 
+      // TODO: verify signature key matches this.signers[chainId]
+      // TODO: verify signature is valid
+      // TODO: verify payload datetime is valid
       const authStorageKey = `CW_SESSIONS-solana-${chainId}-auth`
       const auth = localStorage.getItem(authStorageKey);
       const { payload, signature }: { payload: SessionPayload, signature: string } = JSON.parse(auth);

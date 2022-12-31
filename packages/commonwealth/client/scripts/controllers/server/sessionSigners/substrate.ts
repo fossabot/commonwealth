@@ -1,50 +1,66 @@
-import { Keyring, KeyringPair } from '@polkadot/api';
+import { Keyring } from '@polkadot/api';
+import { IKeyringPair } from '@polkadot/types/types';
+
 import { mnemonicGenerate } from '@polkadot/util-crypto';
 import { Action, ActionArgument, Session, SessionPayload } from "@canvas-js/interfaces";
 import { ISessionController } from "."
 
 export class SubstrateSessionController implements ISessionController {
   keyring: Keyring = new Keyring();
-  signers: Record<string, KeyringPair> = {};
-  privKeys: Record<string, string> = {};
-  pubKeys: Record<string, string> = {};
-
+  signers: Record<string, { pair: IKeyringPair, privateKey: string }> = {};
   private auths: Record<number, { payload: SessionPayload, signature: string }> = {};
 
   getAddress(chainId: string) {
-    return this.addresses[chainId];
+    return new Buffer(this.signers[chainId].pair.publicKey).toString('hex'); // TODO: use chainId to format?
   }
 
   hasAuthenticatedSession(chainId: string): boolean {
-    // TODO: verify
-    return this.signers[chainId] !== undefined && this.privKeys[chainId] !== undefined;
+    return this.signers[chainId] !== undefined && this.auths[chainId] !== undefined;
   }
 
   async getOrCreateAddress(chainId: string): Promise<string> {
-    await this.getOrCreateSigner(chainId);
-    return this.addresses[chainId];
+    return new Buffer((await this.getOrCreateSigner(chainId)).pair.publicKey).toString('hex'); // TODO: use chainId to format?
   }
 
-  async authSession(chainId: string, sessionPayload: SessionPayload, signature: string) {
-    // TODO
-    throw new Error("unimplemented")
+  async authSession(chainId: string, payload: SessionPayload, signature: string) {
+    // TODO: verify signature key matches this.signers[chainId]
+    // TODO: verify signature is valid
+    // TODO: verify payload datetime is valid
+
+    this.auths[chainId] = { payload, signature }
+
+    const authStorageKey = `CW_SESSIONS-substrate-${chainId}-auth`
+    localStorage.setItem(authStorageKey, JSON.stringify(this.auths[chainId]))
   }
 
-  private async getOrCreateSigner(chainId: string): Promise<void> {
+  private async getOrCreateSigner(chainId: string): Promise<IKeyringPair> {
     if (this.signers[chainId] !== undefined) {
-      return this.signers[chainId];
+      return this.signers[chainId].pair;
     }
     const storageKey = `CW_SESSIONS-substrate-${chainId}`;
+    const authStorageKey = `CW_SESSIONS-substrate-${chainId}-auth`
     try {
       const storage = localStorage.getItem(storageKey);
-      const { privateKey, sessionPayload, blockInfo } = JSON.parse(storage);
-      this.privKeys[chainId] = mnemonicGenerate();
-      this.signers[chainId] = this.keyring.addFromUri(this.privKeys[chainId], {});
+      const { privateKey } = JSON.parse(storage);
+      const pair = this.keyring.addFromUri(privateKey, {}); // Use sr25519 by default?
+      this.signers[chainId] = { pair, privateKey };
 
+      // TODO: verify signature key matches this.signers[chainId]
+      // TODO: verify signature is valid
+      // TODO: verify payload datetime is valid
+      const auth = localStorage.getItem(authStorageKey);
+      if (auth !== null) {
+        const { payload, signature }: { payload: SessionPayload, signature: string } = JSON.parse(auth);
+        this.auths[chainId] = { payload, signature };
+      }
     } catch (err) {
-      // this.signers[chainId] = ethers.Wallet.createRandom();
+      const mnemonic = mnemonicGenerate();
+      const pair = this.keyring.addFromMnemonic(mnemonic);
+      this.signers[chainId] = { pair, privateKey: mnemonic };
+      delete this.auths[chainId]
+      localStorage.setItem(storageKey, JSON.stringify({ privateKey: mnemonic }))
     }
-    return this.signers[chainId];
+    return this.signers[chainId].pair;
   }
 
   async sign(chainId: string, call: string, args: Record<string, ActionArgument>):

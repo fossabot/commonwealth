@@ -48,7 +48,6 @@ export class CosmosSDKSessionController implements ISessionController {
   }
 
   hasAuthenticatedSession(chainId: string): boolean {
-    // TODO: verify
     return this.signers[chainId] !== undefined && this.auths[chainId] !== undefined;
   }
 
@@ -58,7 +57,9 @@ export class CosmosSDKSessionController implements ISessionController {
   }
 
   async authSession(chainId: string, payload: SessionPayload, signature: string) {
-    // TODO: recover the publickey from payload/signature; ensure it matches signers[chainId].address
+    // TODO: verify signature key matches this.signers[chainId]
+    // TODO: verify signature is valid
+    // TODO: verify payload datetime is valid
     this.auths[chainId] = { payload, signature }
 
     const authStorageKey = `CW_SESSIONS-cosmos-${chainId}-auth`
@@ -79,7 +80,9 @@ export class CosmosSDKSessionController implements ISessionController {
       const address = accounts[0].address;
       this.signers[chainId] = { signer, address };
 
-      // TODO: validate
+      // TODO: verify signature key matches this.signers[chainId]
+      // TODO: verify signature is valid
+      // TODO: verify payload datetime is valid
       const auth = localStorage.getItem(authStorageKey);
       if (auth !== null) {
         const { payload, signature }: { payload: SessionPayload, signature: string } = JSON.parse(auth);
@@ -105,7 +108,7 @@ export class CosmosSDKSessionController implements ISessionController {
     const { signer, address } = this.signers[chainId];
     const sessionPayload: SessionPayload = this.auths[chainId]?.payload;
     const sessionSignature: string = this.auths[chainId]?.signature;
-    // TODO: verify signature; verify address
+    // TODO: verify payload is not expired
 
 		const actionPayload: ActionPayload = {
       from: sessionPayload.from,

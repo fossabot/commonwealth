@@ -4,27 +4,29 @@ import { Action, Session, ActionArgument, SessionPayload } from "@canvas-js/inte
 import { ISessionController } from "."
 
 export class NEARSessionController implements ISessionController {
-  keys: Record<string, string> = {};
-  addresses: Record<string, string> = {};
-  signers: Record<string, KeyPair> = {};
+  private signers: Record<string, KeyPair> = {};
+  private auths: Record<number, { payload: SessionPayload, signature: string }> = {};
 
   getAddress(chainId: string): string {
-    return this.addresses[chainId];
+    return this.signers[chainId].getPublicKey().toString();
   }
 
   hasAuthenticatedSession(chainId: string): boolean {
-    // TODO: verify
-    return this.signers[chainId] !== undefined && this.keys[chainId] !== undefined;
+    return this.signers[chainId] !== undefined && this.auths[chainId] !== undefined;
   }
 
   async getOrCreateAddress(chainId: string): Promise<string> {
-    await this.getOrCreateSigner(chainId);
-    return this.addresses[chainId];
+    return (await this.getOrCreateSigner(chainId)).getPublicKey().toString();
   }
 
-  async authSession(chainId: string, sessionPayload: SessionPayload, signature: string) {
-    // TODO
-    throw new Error("unimplemented")
+  async authSession(chainId: string, payload: SessionPayload, signature: string) {
+    // TODO: verify signature key matches this.signers[chainId]
+    // TODO: verify signature is valid
+    // TODO: verify payload datetime is valid
+    this.auths[chainId] = { payload, signature };
+
+    const authStorageKey = `CW_SESSIONS-near-${chainId}-auth`
+    localStorage.setItem(authStorageKey, JSON.stringify(this.auths[chainId]));
   }
 
   private async getOrCreateSigner(chainId: string): Promise<KeyPair> {
@@ -32,18 +34,26 @@ export class NEARSessionController implements ISessionController {
       return this.signers[chainId];
     }
     const storageKey = `CW_SESSIONS-near-${chainId}`;
+    const authStorageKey = `CW_SESSIONS-near-${chainId}-auth`;
     // TODO: test session restoration on NEAR
     try {
       const storage = localStorage.getItem(storageKey);
-      const { privateKey, sessionPayload, blockInfo } = JSON.parse(storage);
+      const { privateKey } = JSON.parse(storage);
       this.signers[chainId] = KeyPair.fromString(privateKey);
+
+      // TODO: verify signature key matches this.signers[chainId]
+      // TODO: verify signature is valid
+      // TODO: verify payload datetime is valid
+      const auth = localStorage.getItem(authStorageKey);
+      if (auth !== null) {
+        const { payload, signature }: { payload: SessionPayload, signature: string } = JSON.parse(auth);
+        this.auths[chainId] = { payload, signature };
+      }
     } catch (err) {
-      const signer = KeyPair.fromRandom("ed25519")
-      const privKey = signer.toString()
-      const pubKey = Buffer.from(PublicKey.fromString(privKey).data).toString("hex");
-      this.keys[chainId] = privKey;
-      this.addresses[chainId] = pubKey;
-      this.signers[chainId] = signer;
+      this.signers[chainId] = KeyPair.fromRandom("ed25519");
+      delete this.auths[chainId];
+      localStorage.setItem(storageKey, JSON.stringify({ privateKey: this.signers[chainId].toString() })); 
+      // ?? this isn't the privatekey
     }
     return this.signers[chainId];
   }

@@ -88,7 +88,9 @@ const verifySignature = async (
     addressModel.address,
     sessionPublicAddress,
     sessionTimestamp,
-    addressModel.block_info ? JSON.parse(addressModel.block_info).hash : null,
+    sessionBlockInfo ?
+      (addressModel.block_info ? JSON.parse(addressModel.block_info).hash : null)
+      : null,
   );
 
   let isValid: boolean;
@@ -482,8 +484,8 @@ const verifyAddress = async (
     req.body.signature,
     req.user,
     req.body.session_public_address,
-    req.body.session_timestamp,
-    req.body.session_block_data,
+    req.body.session_timestamp || null, // disallow empty strings
+    req.body.session_block_data || null, // disallow empty strings
   );
 
   if (req.user) {

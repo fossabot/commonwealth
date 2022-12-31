@@ -13,7 +13,6 @@ export class EthereumSessionController implements ISessionController {
   }
 
   hasAuthenticatedSession(chainId: string): boolean {
-    // TODO: verify
     return this.signers[chainId] !== undefined && this.auths[chainId] !== undefined;
   }
 
@@ -22,11 +21,13 @@ export class EthereumSessionController implements ISessionController {
   }
 
   async authSession(chainId: string, payload: SessionPayload, signature: string) {
-    // TODO: recover the publickey from payload/signature; ensure it matches signers[chainId].address
-    this.auths[chainId] = { payload, signature }
+    // TODO: verify signature key matches this.signers[chainId]
+    // TODO: verify signature is valid
+    // TODO: verify payload datetime is valid
+    this.auths[chainId] = { payload, signature };
 
-    const authStorageKey = `CW_SESSIONS-eth-${chainId}-auth`
-    localStorage.setItem(authStorageKey, JSON.stringify(this.auths[chainId]))
+    const authStorageKey = `CW_SESSIONS-eth-${chainId}-auth`;
+    localStorage.setItem(authStorageKey, JSON.stringify(this.auths[chainId]));
   }
 
   private async getOrCreateSigner(chainId: string): Promise<ethers.Wallet> {
@@ -40,7 +41,9 @@ export class EthereumSessionController implements ISessionController {
       const { privateKey } = JSON.parse(storage);
       this.signers[chainId] = new ethers.Wallet(privateKey);
 
-      // TODO: validate
+      // TODO: verify signature key matches this.signers[chainId]
+      // TODO: verify signature is valid
+      // TODO: verify payload datetime is valid
       const auth = localStorage.getItem(authStorageKey);
       if (auth !== null) {
         const { payload, signature }: { payload: SessionPayload, signature: string } = JSON.parse(auth);
@@ -49,8 +52,7 @@ export class EthereumSessionController implements ISessionController {
     } catch (err) {
       this.signers[chainId] = ethers.Wallet.createRandom();
       delete this.auths[chainId]
-      const privateKey = this.signers[chainId].privateKey;
-      localStorage.setItem(storageKey, JSON.stringify({ privateKey }))
+      localStorage.setItem(storageKey, JSON.stringify({ privateKey: this.signers[chainId].privateKey }))
     }
     return this.signers[chainId];
   }
@@ -63,7 +65,7 @@ export class EthereumSessionController implements ISessionController {
     const actionSigner = this.signers[chainId];
     const sessionPayload = this.auths[chainId]?.payload;
     const sessionSignature = this.auths[chainId]?.signature;
-    // TODO: verify signature; verify ecrecover'ed address
+    // TODO: verify payload is not expired
 
 		const actionPayload: ActionPayload = {
       from: sessionPayload.from,

@@ -22,6 +22,10 @@ export const constructCanvasMessage = (
   // This will be replaced with an IPFS hash after turning on peering
   const placeholderMultihash = '/commonwealth';
 
+  // Timestamp and blockhash are optional, but must be explicitly so.
+  if (timestamp === undefined) throw new Error('Invalid Canvas signing message');
+  if (blockhash === undefined) throw new Error('Invalid Canvas signing message');
+
   // Not all data here is used. For chains without block data
   // like Solana/Polkadot, timestamp is left blank in session login.
   //
@@ -32,8 +36,8 @@ export const constructCanvasMessage = (
     spec: placeholderMultihash,
     address: sessionPublicAddress,
     duration: (86400 * 1000).toString(),
-    timestamp: timestamp.toString(),
-    blockhash: blockhash ?? null,
+    timestamp: timestamp === null ? null : timestamp.toString(),
+    blockhash: blockhash === null ? null : blockhash,
     chain: chain,
     chainId: canvasChainId,
   };
