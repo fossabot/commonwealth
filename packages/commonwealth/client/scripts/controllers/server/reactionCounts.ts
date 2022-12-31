@@ -40,13 +40,13 @@ class ReactionCountController {
   ) {
     // TODO: use canvas id
     const like = reaction === "like";
-    const { session, action, hash } =
+    const { session = null, action = null, hash = null } =
       post instanceof Thread
-      ? await app.sessions.signThreadReaction({ threadId: (post as Thread).id, like })
+      ? await app.sessions.signThreadReaction({ thread_id: (post as Thread).id, like })
       : post instanceof Proposal
       ? {}
       : post instanceof Comment
-      ? await app.sessions.signCommentReaction({ threadId: (post as Comment<any>).id, like }) : {};
+      ? await app.sessions.signCommentReaction({ comment_id: (post as Comment<any>).id, like }) : {};
 
     const options = {
       author_chain: app.user.activeAccount.chain.id,
@@ -108,13 +108,13 @@ class ReactionCountController {
   }
 
   public async delete(reaction, reactionCount: ReactionCount<any>) {
-    const { session, action, hash } =
+    const { session = null, action = null, hash = null } =
       reaction.thread_id
-      ? await app.sessions.signDeleteThreadReaction({ id: reaction.canvas_hash })
+      ? await app.sessions.signDeleteThreadReaction({ thread_id: reaction.canvas_hash })
       : reaction.proposal_id
       ? {}
       : reaction.comment_id
-      ? await app.sessions.signDeleteCommentReaction({ id: reaction.canvas_hash }) : {};
+      ? await app.sessions.signDeleteCommentReaction({ comment_id: reaction.canvas_hash }) : {};
 
     // TODO Graham 4/24/22: Investigate necessity of this duplication
     const _this = this;

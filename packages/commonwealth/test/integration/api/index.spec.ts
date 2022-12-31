@@ -58,7 +58,7 @@ describe('API Tests', () => {
       const message = constructCanvasMessage("eth", chain_id, address, sessionWallet.address, timestamp, TEST_BLOCK_INFO_BLOCKHASH);
       const data = constructTypedCanvasMessage(message);
       const privateKey = keypair.getPrivateKey();
-      const signature = signTypedData({ privateKey, data: msgParams, version: SignTypedDataVersion.V4 });
+      const signature = signTypedData({ privateKey, data, version: SignTypedDataVersion.V4 });
       res = await chai.request(app)
         .post('/api/verifyAddress')
         .set('Accept', 'application/json')

@@ -14,7 +14,7 @@ export class EthereumSessionController implements ISessionController {
 
   hasAuthenticatedSession(chainId: string): boolean {
     // TODO: verify
-    return this.signers[chainId] && this.auths[chainId];
+    return this.signers[chainId] !== undefined && this.auths[chainId] !== undefined;
   }
 
   async getOrCreateAddress(chainId: string): Promise<string> {

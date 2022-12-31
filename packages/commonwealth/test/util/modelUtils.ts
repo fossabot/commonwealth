@@ -66,9 +66,10 @@ export const createAndVerifyAddress = async ({ chain }, mnemonic = 'Alice') => {
     const chain_id = chain === 'alex' ? '3' : '1';   // use ETH mainnet for testing except alex
     const sessionWallet = ethers.Wallet.createRandom();
     const timestamp = 1665083987891;
+    const message = constructCanvasMessage("eth", chain_id, address, sessionWallet.address, timestamp, TEST_BLOCK_INFO_BLOCKHASH);
     const data = constructTypedCanvasMessage(message);
     const privateKey = keypair.getPrivateKey();
-    const signature = signTypedData({ privateKey, data: msgParams, version: SignTypedDataVersion.V4 });
+    const signature = signTypedData({ privateKey, data, version: SignTypedDataVersion.V4 });
     res = await chai.request
       .agent(app)
       .post('/api/verifyAddress')
@@ -105,7 +106,7 @@ export const createAndVerifyAddress = async ({ chain }, mnemonic = 'Alice') => {
     const sessionWallet = sessionKeyring.addFromUri(mnemonicGenerate(), {}, 'ed25519');
     const chain_id = ChainNetwork.Edgeware
     const timestamp = 1665083987891
-    const message = constructCanvasMessage("eth", chain_id, address, sessionWallet.address, TEST_BLOCK_INFO_BLOCKHASH);
+    const message = constructCanvasMessage("eth", chain_id, address, sessionWallet.address, timestamp, TEST_BLOCK_INFO_BLOCKHASH);
 
     const signature = keyPair.sign(stringToU8a(JSON.stringify(message)))
 

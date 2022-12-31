@@ -54,8 +54,8 @@ export class ThreadPreviewReactionButton extends ClassComponent<ThreadPreviewRea
         return r.Address.address === activeAddress;
       });
 
-      const { signature } = await app.sessions.signDeleteThreadReaction({
-        id: reaction.canvasId
+      const { session, action, hash } = await app.sessions.signDeleteThreadReaction({
+        thread_id: reaction.canvasId
       });
 
       this.loading = true;
@@ -75,10 +75,8 @@ export class ThreadPreviewReactionButton extends ClassComponent<ThreadPreviewRea
     };
 
     const like = async (chain: ChainInfo, chainId: string, userAddress: string) => {
-      await app.sessions.ensureSessionIsValid();
       const { session, action, hash } = await app.sessions.signThreadReaction({
-        threadId:
-        thread.id,
+        thread_id: thread.id,
         like: true
       });
 

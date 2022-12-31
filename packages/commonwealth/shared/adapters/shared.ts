@@ -16,7 +16,7 @@ export const constructCanvasMessage = (
   canvasChainId: string, // Canvas chain id, e.g. "1" or "osmo" (Note: CW chain id is 1 or "osmo-1")
   fromAddress: string,
   sessionPublicAddress: string,
-  timestamp: number,
+  timestamp: string | number | null,
   blockhash: string | null
 ): SessionPayload => {
   // This will be replaced with an IPFS hash after turning on peering

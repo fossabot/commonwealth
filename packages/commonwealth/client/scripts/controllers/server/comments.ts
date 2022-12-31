@@ -15,6 +15,7 @@ import { modelFromServer as modelReactionFromServer } from 'controllers/server/r
 import { updateLastVisited } from '../app/login';
 import { ProposalType } from "common-common/src/types";
 import proposalIdToEntity from "helpers/proposalIdToEntity";
+import { session } from 'passport';
 
 // tslint:disable: object-literal-key-quotes
 
@@ -174,11 +175,11 @@ class CommentsController {
       chainEntity = app.chainEntities.store.getByUniqueId(app.activeChainId(), proposalIdentifier);
     }
     try {
+      // TODO: Create a new type for proposal comments?
       const { session, action, hash } = await app.sessions.signComment({
-        community: chain,
-        threadId: proposalIdentifier,
-        text: unescapedText,
-        parent: parentCommentId,
+        thread_id: proposalIdentifier,
+        body: unescapedText,
+        parent_comment_id: parentCommentId,
       });
 
       // TODO: Change to POST /comment
@@ -221,8 +222,9 @@ class CommentsController {
     try {
       // TODO: Change to PUT /comment
       const { session, action, hash } = await app.sessions.signComment({
-        text: body,
-        parent: comment.parentCommentId
+        thread_id: comment.rootProposal,
+        body,
+        parent_comment_id: comment.parentComment
       });
       const signedData = JSON.stringify({ session, action });
       const response = await $.post(`${app.serverUrl()}/editComment`, {
@@ -254,8 +256,8 @@ class CommentsController {
   }
 
   public async delete(comment) {
-    const { signature } = await app.sessions.signDeleteComment({
-      hash: comment.canvasHash
+    const { session, action, hash } = await app.sessions.signDeleteComment({
+      comment_id: comment.canvasHash
     });
     return new Promise((resolve, reject) => {
       // TODO: Change to DELETE /comment
@@ -270,6 +272,9 @@ class CommentsController {
             text: '[deleted]',
             plaintext: '[deleted]',
             versionHistory: [],
+            canvas_action: action,
+            canvas_session: session,
+            canvas_hash: hash,
           });
           const softDeletion = new Comment(revisedComment);
           this._store.remove(existing);

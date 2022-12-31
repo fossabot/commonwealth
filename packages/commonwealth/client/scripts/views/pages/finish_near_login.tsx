@@ -109,10 +109,11 @@ class FinishNearLogin extends ClassComponent<Record<string, never>> {
 
       const canvasMessage = constructCanvasMessage(
         "near" as Chain,
-        chainId.toString(),
+        chainId,
         acct.address,
         sessionPublicAddress,
-        null
+        null, // no timestamp
+        null, // no blockhash
       );
 
       this.state.isNewAccount = newAcct.newlyCreated;
@@ -125,7 +126,7 @@ class FinishNearLogin extends ClassComponent<Record<string, never>> {
 
       const signature = await acct.signMessage(JSON.stringify(canvasMessage));
 
-      await acct.validate(signature, chainId);
+      await acct.validate(signature, null, chainId);
       if (!app.isLoggedIn()) {
         await initAppState();
         await updateActiveAddresses(chain);

@@ -253,10 +253,12 @@ class ThreadsController {
   ) {
     try {
       // TODO: Change to POST /thread
-      const { action, session, hash } = app.sessions.signThread({
+      const { action = null, session = null, hash = null } = await app.sessions.signThread({
+        community: chainId,
         title,
         body,
-        link: url
+        link: url,
+        topic: topic.id,
       });
       const response = await $.post(`${app.serverUrl()}/createThread`, {
         author_chain: app.user.activeAccount.chain.id,
@@ -322,10 +324,12 @@ class ThreadsController {
   ) {
     const newBody = body || proposal.body;
     const newTitle = title || proposal.title;
-    const { action, session, hash } = app.sessions.signThread({
+    const { action = null, session = null, hash = null } = await app.sessions.signThread({
+      community: app.activeChainId(),
       title: newTitle,
       body: newBody,
-      link: url
+      link: url,
+      topic: proposal.topic.id,
     });
 
     await $.ajax({
@@ -370,7 +374,9 @@ class ThreadsController {
   }
 
   public async delete(proposal) {
-    const { signature } = await app.sessions.signDeleteThread({ id: proposal.canvasHash });
+    const { session = null, action = null, hash = 0 } = await app.sessions.signDeleteThread({ 
+      thread_id: proposal.canvasHash,
+    });
 
     return new Promise((resolve, reject) => {
       // TODO: Change to DELETE /thread
